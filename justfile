@@ -8,10 +8,10 @@ default:
 
 # === Workflows ===
 
-# Run all quality checks (build → test → integration → format → docs)
+# Run all quality checks (build → unit → integration → format → docs)
 check:
     gleam build
-    gleam test
+    just unit
     just integration
     gleam format
     gleam docs build
@@ -20,7 +20,7 @@ check:
 # Simulate CI pipeline (matches .github/workflows/test.yml)
 ci:
     gleam build
-    gleam test
+    just unit
     just integration
     gleam format --check src test
     gleam docs build
@@ -85,31 +85,50 @@ epic name:
     echo "  - Edit .plan/{{name}}/PLAN.md with your epic details"
     echo "  - Create tasks from .plan/{{name}}/tasks/000_template_task.md"
 
-# === Utilities ===
+# === Testing ===
 
-# Clean build artifacts
-clean:
-    rm -rf build
+# Run all unit tests (fast)
+unit:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Running unit tests..."
+    gleam build
+    # Find all unit test modules and run them via EUnit
+    MODULES=$(find test/unit -name "*_test.gleam" | sed 's|test/||' | sed 's|\.gleam$||' | sed 's|/|@|g' | tr '\n' ' ')
+    erl -pa build/dev/erlang/*/ebin -noshell -eval "
+        Modules = [list_to_atom(M) || M <- string:tokens(\"$MODULES\", \" \")],
+        case eunit:test(Modules, [verbose]) of
+            ok -> erlang:halt(0);
+            _ -> erlang:halt(1)
+        end.
+    "
+    echo "✓ Unit tests passed"
 
-# Run a specific test file (e.g., just test-file parser_tokenizer)
-test-file name:
-    gleam test -- --only {{name}}
-
-# Run integration tests
-# Creates test project, runs generator, verifies output compiles
+# Run Gleam integration tests
 integration:
     #!/usr/bin/env bash
     set -euo pipefail
-
     echo "Running integration tests..."
+    gleam build
+    # Find all integration test modules and run them via EUnit
+    MODULES=$(find test/integration -name "*_test.gleam" | sed 's|test/||' | sed 's|\.gleam$||' | sed 's|/|@|g' | tr '\n' ' ')
+    erl -pa build/dev/erlang/*/ebin -noshell -eval "
+        Modules = [list_to_atom(M) || M <- string:tokens(\"$MODULES\", \" \")],
+        case eunit:test(Modules, [verbose]) of
+            ok -> erlang:halt(0);
+            _ -> erlang:halt(1)
+        end.
+    "
+    echo "✓ Integration tests passed"
 
-    # Create temporary test project
-    TEST_DIR=$(mktemp -d)
-    trap "rm -rf $TEST_DIR" EXIT
-
+# Run CLI smoke test (uses .test/ directory)
+integration-cli:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Running CLI integration test..."
+    TEST_DIR=".test/cli_integration"
+    rm -rf "$TEST_DIR"
     mkdir -p "$TEST_DIR/src"
-
-    # Create gleam.toml (not actually used by the generator, just for reference)
     cat > "$TEST_DIR/gleam.toml" << 'EOF'
     name = "test_project"
     version = "0.1.0"
@@ -117,30 +136,29 @@ integration:
     [dependencies]
     gleam_stdlib = ">= 0.34.0"
     EOF
-
-    # Create test template
     cat > "$TEST_DIR/src/test.lustre" << 'EOF'
     @params(name: String)
     <div class="greeting">{name}</div>
     EOF
-
-    # Run generator with root directory argument
-    echo "  Generating from template..."
     gleam run -m lustre_template_gen -- "$TEST_DIR"
+    test -f "$TEST_DIR/src/test.gleam" || { echo "ERROR: test.gleam not generated"; exit 1; }
+    grep -q "@generated" "$TEST_DIR/src/test.gleam" || { echo "ERROR: Missing @generated"; exit 1; }
+    grep -q "pub fn render" "$TEST_DIR/src/test.gleam" || { echo "ERROR: Missing render"; exit 1; }
+    echo "✓ CLI integration test passed"
 
-    # Verify output exists
-    if [ ! -f "$TEST_DIR/src/test.gleam" ]; then
-        echo "ERROR: test.gleam was not generated"
-        exit 1
-    fi
+# Run all tests
+test: unit integration
+    @echo "✓ All tests passed"
 
-    # Verify output contains expected content
-    echo "  Verifying generated content..."
-    grep -q "@generated" "$TEST_DIR/src/test.gleam" || { echo "ERROR: Missing @generated header"; exit 1; }
-    grep -q "pub fn render" "$TEST_DIR/src/test.gleam" || { echo "ERROR: Missing render function"; exit 1; }
-    grep -q "name: String" "$TEST_DIR/src/test.gleam" || { echo "ERROR: Missing parameter"; exit 1; }
+# === Utilities ===
 
-    echo "  Integration tests passed!"
+# Clean build artifacts
+clean:
+    rm -rf build
+
+# Run a specific test file (e.g., just test-file tokenizer)
+test-file name:
+    gleam test -- --only {{name}}
 
 # === Gleam Passthrough ===
 

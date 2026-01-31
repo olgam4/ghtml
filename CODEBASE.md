@@ -18,7 +18,9 @@ src/components/user_card.lustre  →  src/components/user_card.gleam
 | Task | Command |
 |------|---------|
 | Run all checks | `just check` |
-| Run tests only | `just g test` |
+| Run all tests | `just test` |
+| Run unit tests | `just unit` |
+| Run integration tests | `just integration` |
 | Build | `just g build` |
 | Run CLI | `just run` |
 | Force regenerate | `just run-force` |
@@ -149,21 +151,16 @@ Transforms AST → Gleam source:
 
 ## Test Structure
 
-Tests mirror the source structure:
+Tests are organized by type (unit/integration/e2e):
 ```
 test/
-  lustre_template_gen_test.gleam      # Main test entry
-  integration_test.gleam              # End-to-end integration tests
-  fixtures/                           # Test fixtures (ignored by scanner)
-    simple/basic.lustre               # Simple template fixture
-    attributes/all_attrs.lustre       # Attributes fixture
-    control_flow/full.lustre          # Control flow fixture
-  lustre_template_gen/
-    types_test.gleam                  # Type tests
-    cache_test.gleam                  # Cache tests
+  lustre_template_gen_test.gleam      # Test entry point (gleeunit)
+  unit/                               # Fast, isolated module tests
     scanner_test.gleam                # Scanner tests
     cli_test.gleam                    # CLI tests
+    cache_test.gleam                  # Cache tests
     watcher_test.gleam                # Watcher tests
+    types_test.gleam                  # Type tests
     parser/
       tokenizer_test.gleam            # Tokenizer tests
       ast_test.gleam                  # AST builder tests
@@ -172,7 +169,20 @@ test/
       attributes_test.gleam           # Attribute handling
       control_flow_test.gleam         # if/each/case codegen
       imports_test.gleam              # Smart import tests
+  integration/                        # Pipeline tests
+    pipeline_test.gleam               # End-to-end pipeline tests
+  e2e/                                # E2E tests (placeholder)
+    .gitkeep
+  fixtures/                           # Shared test fixtures (ignored by scanner)
+    simple/basic.lustre               # Simple template fixture
+    attributes/all_attrs.lustre       # Attributes fixture
+    control_flow/full.lustre          # Control flow fixture
 ```
+
+Run tests with:
+- `just unit` - Run unit tests only (fast)
+- `just integration` - Run integration tests
+- `just test` - Run all tests
 
 ## Key Design Decisions
 
@@ -206,7 +216,7 @@ ParseError(span: Span, message: String)
 ### Adding a New Attribute
 1. Add to `known_attributes` list in `codegen.gleam`
 2. If boolean, add to `boolean_attributes` list
-3. Add tests in `test/lustre_template_gen/codegen/attributes_test.gleam`
+3. Add tests in `test/unit/codegen/attributes_test.gleam`
 
 ### Adding a New Control Flow Construct
 1. Add token type in `types.gleam`
@@ -214,4 +224,4 @@ ParseError(span: Span, message: String)
 3. Add stack frame type for nesting
 4. Add AST node handling in `build_ast`
 5. Add codegen in `codegen.gleam`
-6. Add tests in `test/lustre_template_gen/codegen/control_flow_test.gleam`
+6. Add tests in `test/unit/codegen/control_flow_test.gleam`
