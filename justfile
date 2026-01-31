@@ -44,6 +44,32 @@ run-watch:
 run-clean:
     gleam run -m lustre_template_gen -- clean
 
+# === Examples ===
+
+# Build all examples (runs codegen and gleam build for each)
+examples:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for dir in examples/*/; do
+        if [ -f "$dir/justfile" ]; then
+            echo "Building example: $dir"
+            (cd "$dir" && just build)
+        fi
+    done
+    echo "✓ All examples built"
+
+# Clean all examples (removes build artifacts and generated files)
+examples-clean:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    for dir in examples/*/; do
+        if [ -f "$dir/justfile" ]; then
+            echo "Cleaning example: $dir"
+            (cd "$dir" && just clean)
+        fi
+    done
+    echo "✓ All examples cleaned"
+
 # === Utilities ===
 
 # Clean build artifacts
