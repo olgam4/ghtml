@@ -50,4 +50,4 @@ The `.plan/` directory organizes multi-session work into epics with tasks.
 ## Executing Work
 
 - **Single task**: See `SUBAGENT.md` for step-by-step execution
-- **Full epic**: See `ORCHESTRATOR.md` for subagent-based execution
+- **Full epic**: Use `/orchestrate <epic_name>` skill
