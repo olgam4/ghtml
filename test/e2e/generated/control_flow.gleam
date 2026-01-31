@@ -1,23 +1,14 @@
 // @generated from full.lustre
-// @hash ece58a0a04819b7cc94bbbd78092143d6ddf5e4821a3e19bef0cb7228ca86101
-// DO NOT EDIT - regenerate with: just e2e-regen
+// @hash a42bb361efde13b6c904f974200e66415b79dbf4767af620895fe247916318f0
+// DO NOT EDIT - regenerate with: gleam run -m lustre_template_gen
 
+import e2e/generated/types.{type Status, type User, Active, Inactive, Pending}
 import gleam/int
 import gleam/list
 import lustre/attribute
-import lustre/element.{type Element, fragment, text}
+import lustre/element.{type Element, text}
 import lustre/element/html
-
-/// Type alias for User - in real usage this would come from app/types
-pub type User {
-  User(name: String, is_admin: Bool)
-}
-
-/// Type alias for Status - in real usage this would come from app/types
-pub type Status {
-  Active
-  Inactive
-}
+import lustre/element/keyed
 
 pub fn render(user: User, items: List(String), status: Status) -> Element(msg) {
   html.article([attribute.class("user-card")], [
@@ -26,13 +17,12 @@ pub fn render(user: User, items: List(String), status: Status) -> Element(msg) {
       False -> html.span([attribute.class("badge")], [text("User")])
     },
     html.ul([], [
-      fragment(
+      keyed.fragment(
         list.index_map(items, fn(item, i) {
-          html.li([], [
-            text(int.to_string(i)),
-            text(": "),
-            text(item),
-          ])
+          #(
+            int.to_string(i),
+            html.li([], [text(int.to_string(i)), text(": "), text(item)]),
+          )
         }),
       ),
     ]),
@@ -40,6 +30,8 @@ pub fn render(user: User, items: List(String), status: Status) -> Element(msg) {
       Active -> html.span([attribute.class("status active")], [text("Active")])
       Inactive ->
         html.span([attribute.class("status inactive")], [text("Inactive")])
+      Pending ->
+        html.span([attribute.class("status pending")], [text("Pending")])
     },
   ])
 }

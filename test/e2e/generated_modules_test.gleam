@@ -2,12 +2,12 @@
 ////
 //// Verifies that all generated modules exist, compile, and have proper headers.
 
-import e2e/generated/attributes as attributes_template
 import e2e/generated/basic as basic_template
 import e2e/generated/control_flow as control_flow_template
 import e2e/generated/custom_elements as custom_elements_template
 import e2e/generated/edge_cases as edge_cases_template
 import e2e/generated/fragments as fragments_template
+import e2e/generated/types.{Active, User}
 import e2e_helpers
 import gleam/list
 import gleam/string
@@ -86,9 +86,9 @@ pub fn generated_modules_can_be_imported_test() {
 }
 
 pub fn control_flow_template_renders_correctly_test() {
-  let user = control_flow_template.User(name: "Alice", is_admin: True)
+  let user = User(name: "Alice", email: "alice@test.com", is_admin: True)
   let items = ["first", "second"]
-  let status = control_flow_template.Active
+  let status = Active
 
   let html = control_flow_template.render(user, items, status)
   let html_str = element.to_string(html)
@@ -130,10 +130,7 @@ pub fn custom_elements_template_renders_test() {
 }
 
 pub fn fragments_template_renders_test() {
-  let items = [
-    fragments_template.Item(id: "1", content: "Item 1"),
-    fragments_template.Item(id: "2", content: "Item 2"),
-  ]
+  let items = ["Item 1", "Item 2"]
   let html = fragments_template.render(items)
   let html_str = element.to_string(html)
 

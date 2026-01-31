@@ -6,10 +6,11 @@
 
 import e2e/generated/attributes
 import e2e/generated/basic
-import e2e/generated/control_flow.{Active, Inactive, User}
+import e2e/generated/control_flow
 import e2e/generated/custom_elements
 import e2e/generated/edge_cases
-import e2e/generated/fragments.{Item}
+import e2e/generated/fragments
+import e2e/generated/types.{Active, Inactive, User}
 import gleam/string
 import gleeunit/should
 import lustre/element
@@ -94,7 +95,7 @@ pub fn attributes_renders_submit_button_test() {
 // =============================================================================
 
 pub fn control_flow_if_admin_badge_test() {
-  let user = User(name: "Admin", is_admin: True)
+  let user = User(name: "Admin", email: "admin@test.com", is_admin: True)
 
   control_flow.render(user, [], Active)
   |> element.to_string()
@@ -103,7 +104,7 @@ pub fn control_flow_if_admin_badge_test() {
 }
 
 pub fn control_flow_if_not_admin_badge_test() {
-  let user = User(name: "Regular", is_admin: False)
+  let user = User(name: "Regular", email: "regular@test.com", is_admin: False)
 
   control_flow.render(user, [], Active)
   |> element.to_string()
@@ -112,7 +113,7 @@ pub fn control_flow_if_not_admin_badge_test() {
 }
 
 pub fn control_flow_article_container_test() {
-  let user = User(name: "Test", is_admin: False)
+  let user = User(name: "Test", email: "test@test.com", is_admin: False)
 
   control_flow.render(user, [], Active)
   |> element.to_string()
@@ -121,7 +122,7 @@ pub fn control_flow_article_container_test() {
 }
 
 pub fn control_flow_each_single_item_test() {
-  let user = User(name: "Test", is_admin: False)
+  let user = User(name: "Test", email: "test@test.com", is_admin: False)
 
   let html =
     control_flow.render(user, ["Apple"], Active)
@@ -132,7 +133,7 @@ pub fn control_flow_each_single_item_test() {
 }
 
 pub fn control_flow_each_multiple_items_test() {
-  let user = User(name: "Test", is_admin: False)
+  let user = User(name: "Test", email: "test@test.com", is_admin: False)
 
   let html =
     control_flow.render(user, ["Apple", "Banana", "Cherry"], Active)
@@ -144,7 +145,7 @@ pub fn control_flow_each_multiple_items_test() {
 }
 
 pub fn control_flow_each_empty_list_test() {
-  let user = User(name: "Test", is_admin: False)
+  let user = User(name: "Test", email: "test@test.com", is_admin: False)
 
   let html =
     control_flow.render(user, [], Active)
@@ -155,7 +156,7 @@ pub fn control_flow_each_empty_list_test() {
 }
 
 pub fn control_flow_each_with_index_test() {
-  let user = User(name: "Test", is_admin: False)
+  let user = User(name: "Test", email: "test@test.com", is_admin: False)
 
   let html =
     control_flow.render(user, ["First", "Second"], Active)
@@ -169,7 +170,7 @@ pub fn control_flow_each_with_index_test() {
 }
 
 pub fn control_flow_case_active_status_test() {
-  let user = User(name: "Test", is_admin: False)
+  let user = User(name: "Test", email: "test@test.com", is_admin: False)
 
   control_flow.render(user, [], Active)
   |> element.to_string()
@@ -178,7 +179,7 @@ pub fn control_flow_case_active_status_test() {
 }
 
 pub fn control_flow_case_inactive_status_test() {
-  let user = User(name: "Test", is_admin: False)
+  let user = User(name: "Test", email: "test@test.com", is_admin: False)
 
   control_flow.render(user, [], Inactive)
   |> element.to_string()
@@ -187,7 +188,7 @@ pub fn control_flow_case_inactive_status_test() {
 }
 
 pub fn control_flow_badge_class_test() {
-  let user = User(name: "Test", is_admin: True)
+  let user = User(name: "Test", email: "test@test.com", is_admin: True)
 
   control_flow.render(user, [], Active)
   |> element.to_string()
@@ -326,10 +327,7 @@ pub fn fragments_footer_class_test() {
 }
 
 pub fn fragments_renders_items_test() {
-  let items = [
-    Item(id: "1", content: "First"),
-    Item(id: "2", content: "Second"),
-  ]
+  let items = ["First", "Second"]
   let html = fragments.render(items) |> element.to_string()
 
   html |> string.contains("First") |> should.be_true()
@@ -337,7 +335,7 @@ pub fn fragments_renders_items_test() {
 }
 
 pub fn fragments_renders_items_in_paragraphs_test() {
-  let items = [Item(id: "1", content: "Content")]
+  let items = ["Content"]
   fragments.render(items)
   |> element.to_string()
   |> string.contains("<p>")

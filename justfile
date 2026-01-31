@@ -193,6 +193,9 @@ e2e-regen:
     rm -f test/fixtures/custom_elements/web_components.gleam
     rm -f test/fixtures/edge_cases/special.gleam
 
+    # Fix import paths for generated modules (types -> e2e/generated/types)
+    sed -i '' 's/^import types\./import e2e\/generated\/types./' test/e2e/generated/control_flow.gleam 2>/dev/null || true
+
     # Format the generated files
     gleam format test/e2e/generated/
 
