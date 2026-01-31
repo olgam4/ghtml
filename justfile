@@ -133,6 +133,8 @@ test: unit integration
 e2e:
     #!/usr/bin/env bash
     set -euo pipefail
+    echo "Regenerating SSR test modules..."
+    just e2e-regen
     echo "Running E2E tests..."
     gleam build
     # Find all e2e test modules and run them via EUnit
