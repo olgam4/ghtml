@@ -13,6 +13,7 @@
 //// ```
 
 import argv
+import gleam/erlang/process
 import gleam/int
 import gleam/io
 import gleam/list
@@ -20,6 +21,7 @@ import lustre_template_gen/cache
 import lustre_template_gen/codegen
 import lustre_template_gen/parser
 import lustre_template_gen/scanner
+import lustre_template_gen/watcher
 import simplifile
 
 /// Statistics about a generation run
@@ -77,6 +79,17 @@ fn run_generate(root: String, options: CliOptions) {
   let orphans = scanner.cleanup_orphans(root)
   case orphans > 0 {
     True -> io.println("Removed orphans: " <> int.to_string(orphans))
+    False -> Nil
+  }
+
+  // Watch mode if requested
+  case options.watch {
+    True -> {
+      io.println("")
+      let _subject = watcher.start_watching(root)
+      // Keep the process alive until interrupted
+      process.sleep_forever()
+    }
     False -> Nil
   }
 }
