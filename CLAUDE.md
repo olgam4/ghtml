@@ -1,3 +1,6 @@
+# Codebase Context
+Read `CODEBASE.md` first for architecture overview, module guide, and key patterns before implementing any task. Update `CODEBASE.md` after completing implementations that add new modules, change architecture, or introduce new patterns.
+
 # Use Test Driven Development
 1. Implement tests for the change that fail
 2. Implement the simplest implementation that succeed the test cases
