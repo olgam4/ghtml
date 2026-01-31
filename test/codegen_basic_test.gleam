@@ -203,21 +203,17 @@ pub fn generate_multiple_roots_fragment_test() {
 // === Indentation Tests ===
 
 pub fn generate_proper_indentation_test() {
+  // Test with multiple children which forces multi-line formatting
   let template =
     Template(imports: [], params: [], body: [
-      Element(
-        "div",
-        [],
-        [
-          Element("span", [], [TextNode("text", test_span())], test_span()),
-        ],
-        test_span(),
-      ),
+      Element("div", [], [], test_span()),
+      Element("span", [], [], test_span()),
+      Element("p", [], [], test_span()),
     ])
 
   let code = codegen.generate(template, "test.lustre", "abc123")
 
-  // Code should be properly indented
+  // Multiple roots use fragment with proper indentation
   let lines = string.split(code, "\n")
   should.be_true(list.any(lines, fn(l) { string.starts_with(l, "    ") }))
 }
@@ -289,4 +285,64 @@ pub fn generate_imports_test() {
 
   // Should have Lustre imports
   should.be_true(string.contains(code, "import lustre/element"))
+}
+
+// === Format Compliance Tests ===
+
+pub fn generate_format_compliant_params_test() {
+  let template =
+    Template(
+      imports: [],
+      params: [#("name", "String"), #("count", "Int")],
+      body: [Element("div", [], [], test_span())],
+    )
+
+  let code = codegen.generate(template, "test.lustre", "abc123")
+
+  // Parameters should be on single line without trailing comma
+  should.be_true(string.contains(code, "name: String, count: Int) ->"))
+}
+
+pub fn generate_format_compliant_single_child_test() {
+  let template =
+    Template(imports: [], params: [], body: [
+      Element("div", [], [TextNode("hello", test_span())], test_span()),
+    ])
+
+  let code = codegen.generate(template, "test.lustre", "abc123")
+
+  // Single child should be inline
+  should.be_true(string.contains(code, "html.div([], [text(\"hello\")])"))
+}
+
+pub fn generate_format_compliant_nested_test() {
+  let template =
+    Template(imports: [], params: [], body: [
+      Element(
+        "div",
+        [],
+        [Element("span", [], [TextNode("hi", test_span())], test_span())],
+        test_span(),
+      ),
+    ])
+
+  let code = codegen.generate(template, "test.lustre", "abc123")
+
+  // Nested elements should be properly formatted
+  should.be_true(string.contains(
+    code,
+    "html.div([], [html.span([], [text(\"hi\")])])",
+  ))
+}
+
+pub fn generate_trailing_newline_test() {
+  let template =
+    Template(imports: [], params: [], body: [
+      Element("div", [], [], test_span()),
+    ])
+
+  let code = codegen.generate(template, "test.lustre", "abc123")
+
+  // Generated code should end with a newline (gleam format requirement)
+  should.be_true(string.ends_with(code, "\n"))
 }

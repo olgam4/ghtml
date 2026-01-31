@@ -1,7 +1,8 @@
 //// Gleam code generator from parsed templates.
 ////
 //// Transforms the parsed AST into valid Gleam source code that uses the
-//// Lustre library to render HTML elements.
+//// Lustre library to render HTML elements. Generated code is formatted
+//// to be compliant with `gleam format`.
 
 import gleam/list
 import gleam/result
@@ -24,7 +25,7 @@ pub fn generate(template: Template, source_path: String, hash: String) -> String
   let imports = generate_imports(template)
   let body = generate_function(template)
 
-  header <> "\n" <> imports <> "\n\n" <> body
+  header <> "\n" <> imports <> "\n\n" <> body <> "\n"
 }
 
 /// Extract the filename from a full path
@@ -56,115 +57,108 @@ fn is_void_element(tag: String) -> Bool {
 /// Generate the main render function
 fn generate_function(template: Template) -> String {
   let params = generate_params(template.params)
-  let body = generate_children(template.body, 1)
 
-  "pub fn render("
-  <> params
-  <> ") -> Element(msg) {\n"
-  <> case list.length(template.body) {
-    1 -> body <> "\n"
-    _ -> "  fragment([\n" <> body <> "\n  ])\n"
+  case list.length(template.body) {
+    0 -> "pub fn render(" <> params <> ") -> Element(msg) {\n  fragment([])\n}"
+    1 -> {
+      let body =
+        generate_node_inline(
+          list.first(template.body)
+          |> result.unwrap(TextNode(
+            "",
+            types.point_span(types.start_position()),
+          )),
+        )
+      "pub fn render(" <> params <> ") -> Element(msg) {\n  " <> body <> "\n}"
+    }
+    _ -> {
+      // Multiple roots need fragment with multi-line formatting
+      let children =
+        template.body
+        |> list.filter_map(fn(node) {
+          let code = generate_node_inline(node)
+          case string.trim(code) {
+            "" -> Error(Nil)
+            _ -> Ok("    " <> code)
+          }
+        })
+        |> string.join(",\n")
+      "pub fn render("
+      <> params
+      <> ") -> Element(msg) {\n  fragment([\n"
+      <> children
+      <> ",\n  ])\n}"
+    }
   }
-  <> "}"
 }
 
-/// Generate function parameters from template params
+/// Generate function parameters from template params (single line, no trailing comma)
 fn generate_params(params: List(#(String, String))) -> String {
   params
-  |> list.map(fn(p) { "\n  " <> p.0 <> ": " <> p.1 <> "," })
-  |> string.concat()
+  |> list.map(fn(p) { p.0 <> ": " <> p.1 })
+  |> string.join(", ")
 }
 
-/// Generate code for a single AST node
-fn generate_node(node: Node, indent: Int) -> String {
+/// Generate code for a single AST node (inline, no indentation)
+fn generate_node_inline(node: Node) -> String {
   case node {
     Element(tag, attrs, children, _) ->
-      generate_element(tag, attrs, children, indent)
-    TextNode(content, _) -> generate_text(content, indent)
-    ExprNode(expr, _) -> generate_expr(expr, indent)
+      generate_element_inline(tag, attrs, children)
+    TextNode(content, _) -> generate_text_inline(content)
+    ExprNode(expr, _) -> "text(" <> expr <> ")"
     // Control flow nodes handled in Task 009
-    _ -> make_indent(indent) <> "fragment([])"
+    _ -> "fragment([])"
   }
 }
 
-/// Generate code for an HTML element
-fn generate_element(
+/// Generate code for an HTML element (inline format)
+fn generate_element_inline(
   tag: String,
   _attrs: List(Attr),
   children: List(Node),
-  indent: Int,
 ) -> String {
   let attrs_code = "[]"
   // Placeholder, Task 008
 
   let children_code = case is_void_element(tag) {
     True -> ""
-    False -> generate_children(children, indent + 1)
+    False -> generate_children_inline(children)
   }
 
-  let ind = make_indent(indent)
   case is_custom_element(tag) {
     True ->
-      ind
-      <> "element(\""
+      "element(\""
       <> tag
       <> "\", "
       <> attrs_code
       <> ", ["
-      <> format_children(children_code)
+      <> children_code
       <> "])"
     False ->
-      ind
-      <> "html."
-      <> tag
-      <> "("
-      <> attrs_code
-      <> ", ["
-      <> format_children(children_code)
-      <> "])"
+      "html." <> tag <> "(" <> attrs_code <> ", [" <> children_code <> "])"
   }
 }
 
-/// Format children code with proper newlines
-fn format_children(children_code: String) -> String {
-  case string.is_empty(children_code) {
-    True -> ""
-    False -> "\n" <> children_code <> "\n" <> make_indent(1)
-  }
-}
-
-/// Generate code for a text node with whitespace normalization
-fn generate_text(content: String, indent: Int) -> String {
+/// Generate code for a text node with whitespace normalization (inline)
+fn generate_text_inline(content: String) -> String {
   let normalized = normalize_whitespace(content)
   case is_blank(normalized) {
     True -> ""
-    // Skip whitespace-only nodes
-    False ->
-      make_indent(indent) <> "text(\"" <> escape_string(normalized) <> "\")"
+    False -> "text(\"" <> escape_string(normalized) <> "\")"
   }
 }
 
-/// Generate code for an expression node
-fn generate_expr(expr: String, indent: Int) -> String {
-  make_indent(indent) <> "text(" <> expr <> ")"
-}
-
-/// Generate code for a list of children nodes
-fn generate_children(children: List(Node), indent: Int) -> String {
+/// Generate code for a list of children nodes (inline, comma-separated)
+fn generate_children_inline(children: List(Node)) -> String {
   children
   |> list.filter_map(fn(child) {
-    let code = generate_node(child, indent)
+    let code = generate_node_inline(child)
     case string.trim(code) {
       "" -> Error(Nil)
       _ -> Ok(code)
     }
   })
-  |> string.join(",\n")
-}
-
-/// Create an indentation string for the given level
-fn make_indent(level: Int) -> String {
-  string.repeat("  ", level)
+  |> string.join(", ")
 }
 
 /// Escape special characters in a string for Gleam code
