@@ -21,7 +21,7 @@ Tasks are named with a three-digit prefix:
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 001 | Rename simple example | [ ] Pending | |
+| 001 | Rename simple example | [x] Complete | |
 | 002 | Create attributes example | [ ] Pending | Depends on 001 |
 | 003 | Create events example | [ ] Pending | Depends on 001 |
 | 004 | Create control flow example | [ ] Pending | Depends on 001 |
