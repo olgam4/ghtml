@@ -5,12 +5,14 @@
 //// to be compliant with `gleam format`.
 
 import gleam/list
+import gleam/option.{None, Some}
 import gleam/result
 import gleam/string
 import lustre_template_gen/cache
 import lustre_template_gen/types.{
-  type Attr, type Node, type Template, BooleanAttr, DynamicAttr, Element,
-  EventAttr, ExprNode, StaticAttr, TextNode,
+  type Attr, type CaseBranch, type Node, type Template, BooleanAttr, CaseNode,
+  DynamicAttr, EachNode, Element, EventAttr, ExprNode, Fragment, IfNode,
+  StaticAttr, TextNode,
 }
 
 /// List of HTML void elements that cannot have children
@@ -73,13 +75,24 @@ fn extract_filename(path: String) -> String {
 
 /// Generate import statements for the generated module
 fn generate_imports(template: Template) -> String {
-  let base_imports =
-    "import lustre/element.{type Element, fragment, text}
-import lustre/element/html"
-
   let needs_attrs = template_has_attrs(template.body)
   let needs_events = template_has_events(template.body)
+  let needs_if = template_has_if(template.body)
+  let needs_each = template_has_each(template.body)
+  let needs_each_index = template_has_each_with_index(template.body)
 
+  // Build element imports based on needs
+  let element_imports = case needs_if, needs_each {
+    True, True ->
+      "import lustre/element.{type Element, fragment, keyed, none, text}"
+    True, False -> "import lustre/element.{type Element, fragment, none, text}"
+    False, True -> "import lustre/element.{type Element, fragment, keyed, text}"
+    False, False -> "import lustre/element.{type Element, fragment, text}"
+  }
+
+  let base_imports = element_imports <> "\nimport lustre/element/html"
+
+  // Add attribute/event imports
   let imports = case needs_attrs, needs_events {
     True, True ->
       base_imports <> "\nimport lustre/attribute\nimport lustre/event"
@@ -88,7 +101,84 @@ import lustre/element/html"
     False, False -> base_imports
   }
 
+  // Add list import if needed for each
+  let imports = case needs_each {
+    True -> imports <> "\nimport gleam/list"
+    False -> imports
+  }
+
+  // Add int import if needed for index
+  let imports = case needs_each_index {
+    True -> imports <> "\nimport gleam/int"
+    False -> imports
+  }
+
   imports
+}
+
+/// Check if any nodes have if nodes
+fn template_has_if(nodes: List(Node)) -> Bool {
+  list.any(nodes, node_has_if)
+}
+
+/// Check if a node or its children have if nodes
+fn node_has_if(node: Node) -> Bool {
+  case node {
+    IfNode(_, then_branch, else_branch, _) ->
+      True
+      || list.any(then_branch, node_has_if)
+      || list.any(else_branch, node_has_if)
+    EachNode(_, _, _, body, _) -> list.any(body, node_has_if)
+    CaseNode(_, branches, _) ->
+      list.any(branches, fn(b: CaseBranch) { list.any(b.body, node_has_if) })
+    Element(_, _, children, _) -> list.any(children, node_has_if)
+    Fragment(children, _) -> list.any(children, node_has_if)
+    _ -> False
+  }
+}
+
+/// Check if any nodes have each nodes
+fn template_has_each(nodes: List(Node)) -> Bool {
+  list.any(nodes, node_has_each)
+}
+
+/// Check if a node or its children have each nodes
+fn node_has_each(node: Node) -> Bool {
+  case node {
+    EachNode(_, _, _, body, _) -> True || list.any(body, node_has_each)
+    IfNode(_, then_branch, else_branch, _) ->
+      list.any(then_branch, node_has_each)
+      || list.any(else_branch, node_has_each)
+    CaseNode(_, branches, _) ->
+      list.any(branches, fn(b: CaseBranch) { list.any(b.body, node_has_each) })
+    Element(_, _, children, _) -> list.any(children, node_has_each)
+    Fragment(children, _) -> list.any(children, node_has_each)
+    _ -> False
+  }
+}
+
+/// Check if any nodes have each nodes with index
+fn template_has_each_with_index(nodes: List(Node)) -> Bool {
+  list.any(nodes, node_has_each_with_index)
+}
+
+/// Check if a node or its children have each nodes with index
+fn node_has_each_with_index(node: Node) -> Bool {
+  case node {
+    EachNode(_, _, Some(_), body, _) ->
+      True || list.any(body, node_has_each_with_index)
+    EachNode(_, _, None, body, _) -> list.any(body, node_has_each_with_index)
+    IfNode(_, then_branch, else_branch, _) ->
+      list.any(then_branch, node_has_each_with_index)
+      || list.any(else_branch, node_has_each_with_index)
+    CaseNode(_, branches, _) ->
+      list.any(branches, fn(b: CaseBranch) {
+        list.any(b.body, node_has_each_with_index)
+      })
+    Element(_, _, children, _) -> list.any(children, node_has_each_with_index)
+    Fragment(children, _) -> list.any(children, node_has_each_with_index)
+    _ -> False
+  }
 }
 
 /// Check if any nodes have attributes
@@ -101,6 +191,13 @@ fn node_has_attrs(node: Node) -> Bool {
   case node {
     Element(_, attrs, children, _) ->
       has_non_event_attrs(attrs) || list.any(children, node_has_attrs)
+    IfNode(_, then_branch, else_branch, _) ->
+      list.any(then_branch, node_has_attrs)
+      || list.any(else_branch, node_has_attrs)
+    EachNode(_, _, _, body, _) -> list.any(body, node_has_attrs)
+    CaseNode(_, branches, _) ->
+      list.any(branches, fn(b: CaseBranch) { list.any(b.body, node_has_attrs) })
+    Fragment(children, _) -> list.any(children, node_has_attrs)
     _ -> False
   }
 }
@@ -127,6 +224,13 @@ fn node_has_events(node: Node) -> Bool {
   case node {
     Element(_, attrs, children, _) ->
       has_event_attrs(attrs) || list.any(children, node_has_events)
+    IfNode(_, then_branch, else_branch, _) ->
+      list.any(then_branch, node_has_events)
+      || list.any(else_branch, node_has_events)
+    EachNode(_, _, _, body, _) -> list.any(body, node_has_events)
+    CaseNode(_, branches, _) ->
+      list.any(branches, fn(b: CaseBranch) { list.any(b.body, node_has_events) })
+    Fragment(children, _) -> list.any(children, node_has_events)
     _ -> False
   }
 }
@@ -203,8 +307,12 @@ fn generate_node_inline(node: Node) -> String {
       generate_element_inline(tag, attrs, children)
     TextNode(content, _) -> generate_text_inline(content)
     ExprNode(expr, _) -> "text(" <> expr <> ")"
-    // Control flow nodes handled in Task 009
-    _ -> "fragment([])"
+    IfNode(condition, then_branch, else_branch, _) ->
+      generate_if_node_inline(condition, then_branch, else_branch)
+    EachNode(collection, item, index, body, _) ->
+      generate_each_node_inline(collection, item, index, body)
+    CaseNode(expr, branches, _) -> generate_case_node_inline(expr, branches)
+    Fragment(children, _) -> generate_fragment_inline(children)
   }
 }
 
@@ -399,4 +507,95 @@ fn collapse_spaces(
 /// Check if a string is blank (empty or only whitespace)
 fn is_blank(text: String) -> Bool {
   string.trim(text) == ""
+}
+
+/// Generate code for an if node (case expression with True/False branches)
+fn generate_if_node_inline(
+  condition: String,
+  then_branch: List(Node),
+  else_branch: List(Node),
+) -> String {
+  let then_code = generate_branch_content(then_branch)
+  let else_code = case else_branch {
+    [] -> "none()"
+    _ -> generate_branch_content(else_branch)
+  }
+
+  "case "
+  <> condition
+  <> " { True -> "
+  <> then_code
+  <> " False -> "
+  <> else_code
+  <> " }"
+}
+
+/// Generate code for branch content (single node or fragment for multiple)
+fn generate_branch_content(nodes: List(Node)) -> String {
+  case nodes {
+    [] -> "none()"
+    [single] -> generate_node_inline(single)
+    multiple -> {
+      let children = generate_children_inline(multiple)
+      "fragment([" <> children <> "])"
+    }
+  }
+}
+
+/// Generate code for an each node (keyed with list.map or list.index_map)
+fn generate_each_node_inline(
+  collection: String,
+  item: String,
+  index: option.Option(String),
+  body: List(Node),
+) -> String {
+  let body_code = generate_branch_content(body)
+
+  case index {
+    None -> {
+      // No index: list.map with keyed
+      "keyed(list.map("
+      <> collection
+      <> ", fn("
+      <> item
+      <> ") { #("
+      <> item
+      <> ".id, "
+      <> body_code
+      <> ") }))"
+    }
+    Some(idx) -> {
+      // With index: list.index_map with keyed
+      "keyed(list.index_map("
+      <> collection
+      <> ", fn("
+      <> item
+      <> ", "
+      <> idx
+      <> ") { #(int.to_string("
+      <> idx
+      <> "), "
+      <> body_code
+      <> ") }))"
+    }
+  }
+}
+
+/// Generate code for a case node
+fn generate_case_node_inline(expr: String, branches: List(CaseBranch)) -> String {
+  let branches_code =
+    branches
+    |> list.map(fn(branch: CaseBranch) {
+      let body_code = generate_branch_content(branch.body)
+      branch.pattern <> " -> " <> body_code
+    })
+    |> string.join(" ")
+
+  "case " <> expr <> " { " <> branches_code <> " }"
+}
+
+/// Generate code for a fragment node
+fn generate_fragment_inline(children: List(Node)) -> String {
+  let children_code = generate_children_inline(children)
+  "fragment([" <> children_code <> "])"
 }
