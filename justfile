@@ -150,6 +150,56 @@ integration-cli:
 test: unit integration
     @echo "✓ All tests passed"
 
+# === E2E Testing ===
+
+# Regenerate E2E SSR test modules from fixtures
+e2e-regen:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Regenerating SSR test modules..."
+
+    # Build first to ensure codegen is compiled
+    gleam build
+
+    # Generate each fixture using the template generator
+    # The output goes to test/e2e/generated/ with proper module names
+    for fixture in test/fixtures/simple/basic.lustre \
+                   test/fixtures/attributes/all_attrs.lustre \
+                   test/fixtures/control_flow/full.lustre \
+                   test/fixtures/fragments/multiple_roots.lustre \
+                   test/fixtures/custom_elements/web_components.lustre \
+                   test/fixtures/edge_cases/special.lustre; do
+        echo "  Processing: $fixture"
+        # The generator outputs alongside source, so we need to process after
+    done
+
+    # Run generator on fixtures dir (creates .gleam files alongside .lustre)
+    gleam run -m lustre_template_gen -- test/fixtures
+
+    # Copy to e2e/generated with appropriate names
+    mkdir -p test/e2e/generated
+    cp test/fixtures/simple/basic.gleam test/e2e/generated/basic.gleam 2>/dev/null || true
+    cp test/fixtures/attributes/all_attrs.gleam test/e2e/generated/attributes.gleam 2>/dev/null || true
+    cp test/fixtures/control_flow/full.gleam test/e2e/generated/control_flow.gleam 2>/dev/null || true
+    cp test/fixtures/fragments/multiple_roots.gleam test/e2e/generated/fragments.gleam 2>/dev/null || true
+    cp test/fixtures/custom_elements/web_components.gleam test/e2e/generated/custom_elements.gleam 2>/dev/null || true
+    cp test/fixtures/edge_cases/special.gleam test/e2e/generated/edge_cases.gleam 2>/dev/null || true
+
+    # Clean up generated files from fixtures directory
+    rm -f test/fixtures/simple/basic.gleam
+    rm -f test/fixtures/attributes/all_attrs.gleam
+    rm -f test/fixtures/control_flow/full.gleam
+    rm -f test/fixtures/fragments/multiple_roots.gleam
+    rm -f test/fixtures/custom_elements/web_components.gleam
+    rm -f test/fixtures/edge_cases/special.gleam
+
+    # Format the generated files
+    gleam format test/e2e/generated/
+
+    echo "Generated SSR test modules:"
+    ls -la test/e2e/generated/*.gleam
+    echo "✓ SSR test modules regenerated"
+
 # === Utilities ===
 
 # Clean build artifacts
