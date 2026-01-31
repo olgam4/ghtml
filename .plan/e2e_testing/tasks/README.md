@@ -25,7 +25,7 @@ The numbering indicates a recommended execution order, though tasks can be execu
 | 005 | Add Lustre Dev Dependency | [x] Complete | Independent |
 | 006 | SSR Test Modules | [x] Complete | Depends on 003, 005 |
 | 007 | SSR HTML Tests | [x] Complete | Depends on 005, 006 |
-| 008 | Justfile Integration | [ ] Pending | Depends on 000, 004, 007 |
+| 008 | Justfile Integration | [x] Complete | Depends on 000, 004, 007 |
 | 009 | Slim Integration Tests | [ ] Pending | Depends on 007; removes redundant tests |
 
 Status legend:
