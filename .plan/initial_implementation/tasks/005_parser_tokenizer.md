@@ -529,16 +529,16 @@ pub fn tokenize_position_tracking_test() {
 ```
 
 ## Verification Checklist
-- [ ] `gleam build` succeeds
-- [ ] `gleam test` passes all tokenizer tests
-- [ ] Imports are tokenized correctly
-- [ ] Params with complex types work
-- [ ] All attribute types are parsed
-- [ ] Escaped braces work
-- [ ] Nested expressions with braces work
-- [ ] Control flow tokens are correct
-- [ ] HTML comments are stripped
-- [ ] Error positions are accurate
+- [x] `gleam build` succeeds
+- [x] `gleam test` passes all tokenizer tests
+- [x] Imports are tokenized correctly
+- [x] Params with complex types work
+- [x] All attribute types are parsed
+- [x] Escaped braces work
+- [x] Nested expressions with braces work
+- [x] Control flow tokens are correct
+- [x] HTML comments are stripped
+- [x] Error positions are accurate
 
 ## Notes
 - This task only covers tokenization, not AST building

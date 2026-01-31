@@ -471,14 +471,14 @@ pub fn generate_imports_correct_order_test() {
 ```
 
 ## Verification Checklist
-- [ ] `gleam build` succeeds
-- [ ] `gleam test` passes all import tests
-- [ ] Minimal imports for simple templates
-- [ ] `gleam/list` only when `{#each}` is used
-- [ ] `lustre/event` only when event handlers are used
-- [ ] `keyed`, `none`, `fragment` conditionally included
-- [ ] No duplicate imports with user imports
-- [ ] Import order is logical (auto, lustre, user)
+- [x] `gleam build` succeeds
+- [x] `gleam test` passes all import tests
+- [x] Minimal imports for simple templates
+- [x] `gleam/list` only when `{#each}` is used
+- [x] `lustre/event` only when event handlers are used
+- [x] `keyed`, `none`, `fragment` conditionally included
+- [x] No duplicate imports with user imports
+- [x] Import order is logical (auto, lustre, user)
 
 ## Notes
 - The import analysis traverses the entire AST

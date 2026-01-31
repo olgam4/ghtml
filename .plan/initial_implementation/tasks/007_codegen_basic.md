@@ -415,14 +415,14 @@ pub fn generate_proper_indentation_test() {
 ```
 
 ## Verification Checklist
-- [ ] `gleam build` succeeds
-- [ ] `gleam test` passes all basic codegen tests
-- [ ] Standard HTML tags use `html.tag()` format
-- [ ] Custom elements use `element()` format
-- [ ] Text is properly escaped
-- [ ] Whitespace is normalized
-- [ ] Multiple roots use `fragment()`
-- [ ] Header includes hash and source filename
+- [x] `gleam build` succeeds
+- [x] `gleam test` passes all basic codegen tests
+- [x] Standard HTML tags use `html.tag()` format
+- [x] Custom elements use `element()` format
+- [x] Text is properly escaped
+- [x] Whitespace is normalized
+- [x] Multiple roots use `fragment()`
+- [x] Header includes hash and source filename
 
 ## Notes
 - This task focuses on basic structure; attributes and control flow come later

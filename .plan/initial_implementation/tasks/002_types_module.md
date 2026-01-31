@@ -316,11 +316,11 @@ pub fn point_span_test() {
 ```
 
 ## Verification Checklist
-- [ ] `gleam build` succeeds
-- [ ] `gleam test` passes all type tests
-- [ ] Types can be imported in other modules
-- [ ] All variants of each type are tested
-- [ ] Helper functions work correctly
+- [x] `gleam build` succeeds
+- [x] `gleam test` passes all type tests
+- [x] Types can be imported in other modules
+- [x] All variants of each type are tested
+- [x] Helper functions work correctly
 
 ## Notes
 - Import `gleam/option.{type Option}` for the `Option` type in `EachNode`

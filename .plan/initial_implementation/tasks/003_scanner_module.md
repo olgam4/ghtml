@@ -210,12 +210,12 @@ pub fn path_conversion_roundtrip_test() {
 ```
 
 ## Verification Checklist
-- [ ] `gleam build` succeeds
-- [ ] `gleam test` passes all scanner tests
-- [ ] Files in ignored directories are not found
-- [ ] Nested directories are searched correctly
-- [ ] Empty/nonexistent directories handled gracefully
-- [ ] Path conversion works correctly
+- [x] `gleam build` succeeds
+- [x] `gleam test` passes all scanner tests
+- [x] Files in ignored directories are not found
+- [x] Nested directories are searched correctly
+- [x] Empty/nonexistent directories handled gracefully
+- [x] Path conversion works correctly
 
 ## Notes
 - The scanner doesn't read file contents, only finds paths

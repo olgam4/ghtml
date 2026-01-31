@@ -335,14 +335,14 @@ pub fn is_generated_detection_test() {
 ```
 
 ## Verification Checklist
-- [ ] `gleam build` succeeds
-- [ ] `gleam test` passes all orphan cleanup tests
-- [ ] Only files with `@generated` marker are deleted
-- [ ] Files with existing sources are kept
-- [ ] Hand-written files are never touched
-- [ ] Nested directories are handled
-- [ ] Count of removed files is accurate
-- [ ] `gleam run -m lustre_template_gen -- clean` works
+- [x] `gleam build` succeeds
+- [x] `gleam test` passes all orphan cleanup tests
+- [x] Only files with `@generated` marker are deleted
+- [x] Files with existing sources are kept
+- [x] Hand-written files are never touched
+- [x] Nested directories are handled
+- [x] Count of removed files is accurate
+- [x] `gleam run -m lustre_template_gen -- clean` works
 
 ## Notes
 - The `@generated` marker MUST be at the start of the file

@@ -478,14 +478,14 @@ pub fn generate_attr_with_special_chars_test() {
 ```
 
 ## Verification Checklist
-- [ ] `gleam build` succeeds
-- [ ] `gleam test` passes all attribute tests
-- [ ] Known attributes use dedicated functions
-- [ ] Unknown attributes use `attribute.attribute()`
-- [ ] Boolean attributes differ between standard/custom elements
-- [ ] Event handlers map to correct Lustre events
-- [ ] Custom events use `event.on()`
-- [ ] Attribute values are properly escaped
+- [x] `gleam build` succeeds
+- [x] `gleam test` passes all attribute tests
+- [x] Known attributes use dedicated functions
+- [x] Unknown attributes use `attribute.attribute()`
+- [x] Boolean attributes differ between standard/custom elements
+- [x] Event handlers map to correct Lustre events
+- [x] Custom events use `event.on()`
+- [x] Attribute values are properly escaped
 
 ## Notes
 - The attribute mapping should match Lustre's actual API

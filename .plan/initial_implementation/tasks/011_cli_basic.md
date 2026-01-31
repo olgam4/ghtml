@@ -392,14 +392,14 @@ rm -rf "$TEST_DIR"
 ```
 
 ## Verification Checklist
-- [ ] `gleam build` succeeds
-- [ ] `gleam test` passes all CLI tests
-- [ ] `gleam run -m lustre_template_gen` works in a test project
-- [ ] Force flag regenerates all files
-- [ ] Unchanged files are skipped
-- [ ] Parse errors show helpful messages
-- [ ] Statistics are displayed correctly
-- [ ] Generated code compiles with Gleam
+- [x] `gleam build` succeeds
+- [x] `gleam test` passes all CLI tests
+- [x] `gleam run -m lustre_template_gen` works in a test project
+- [x] Force flag regenerates all files
+- [x] Unchanged files are skipped
+- [x] Parse errors show helpful messages
+- [x] Statistics are displayed correctly
+- [x] Generated code compiles with Gleam
 
 ## Notes
 - The CLI should be user-friendly with clear output

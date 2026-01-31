@@ -430,15 +430,15 @@ echo "Watch test complete"
 ```
 
 ## Verification Checklist
-- [ ] `gleam build` succeeds
-- [ ] `gleam test` passes all watcher tests
-- [ ] `-- watch` flag starts watch mode
-- [ ] Modified files are regenerated
-- [ ] New files are detected
-- [ ] Deleted files trigger cleanup
-- [ ] Watcher runs continuously until Ctrl+C
-- [ ] Parse errors are reported without crashing
-- [ ] Multiple rapid changes don't cause issues
+- [x] `gleam build` succeeds
+- [x] `gleam test` passes all watcher tests
+- [x] `-- watch` flag starts watch mode
+- [x] Modified files are regenerated
+- [x] New files are detected
+- [x] Deleted files trigger cleanup
+- [x] Watcher runs continuously until Ctrl+C
+- [x] Parse errors are reported without crashing
+- [x] Multiple rapid changes don't cause issues
 
 ## Notes
 - Polling at 500ms provides reasonable responsiveness

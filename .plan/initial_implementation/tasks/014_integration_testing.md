@@ -454,14 +454,14 @@ jobs:
 See the comprehensive test file above in section 3.
 
 ## Verification Checklist
-- [ ] `gleam build` succeeds
-- [ ] `gleam test` passes all integration tests
-- [ ] Full example from plan generates correctly
-- [ ] All control flow constructs work
-- [ ] All attribute types work
-- [ ] Error messages are helpful
-- [ ] Performance is acceptable
-- [ ] CI pipeline passes
+- [x] `gleam build` succeeds
+- [x] `gleam test` passes all integration tests
+- [x] Full example from plan generates correctly
+- [x] All control flow constructs work
+- [x] All attribute types work
+- [x] Error messages are helpful
+- [x] Performance is acceptable
+- [x] CI pipeline passes
 
 ## Notes
 - Integration tests are slower than unit tests

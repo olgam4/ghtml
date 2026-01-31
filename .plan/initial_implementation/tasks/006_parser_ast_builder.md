@@ -439,14 +439,14 @@ line 3 {broken"
 ```
 
 ## Verification Checklist
-- [ ] `gleam build` succeeds
-- [ ] `gleam test` passes all AST builder tests
-- [ ] Elements nest correctly
-- [ ] Control flow creates proper structures
-- [ ] Metadata (imports, params) extracted correctly
-- [ ] Unclosed structures produce errors
-- [ ] Error messages include position info
-- [ ] Complex templates parse end-to-end
+- [x] `gleam build` succeeds
+- [x] `gleam test` passes all AST builder tests
+- [x] Elements nest correctly
+- [x] Control flow creates proper structures
+- [x] Metadata (imports, params) extracted correctly
+- [x] Unclosed structures produce errors
+- [x] Error messages include position info
+- [x] Complex templates parse end-to-end
 
 ## Notes
 - The AST builder is the most complex part of the parser

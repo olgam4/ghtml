@@ -272,12 +272,12 @@ pub fn needs_regeneration_invalid_output_header_test() {
 ```
 
 ## Verification Checklist
-- [ ] `gleam build` succeeds
-- [ ] `gleam test` passes all cache tests
-- [ ] Hash output is correct format (64 char lowercase hex)
-- [ ] Known hash values match expected
-- [ ] Missing file cases handled correctly
-- [ ] Invalid header cases handled correctly
+- [x] `gleam build` succeeds
+- [x] `gleam test` passes all cache tests
+- [x] Hash output is correct format (64 char lowercase hex)
+- [x] Known hash values match expected
+- [x] Missing file cases handled correctly
+- [x] Invalid header cases handled correctly
 
 ## Notes
 - The hash is of the source `.lustre` file content only

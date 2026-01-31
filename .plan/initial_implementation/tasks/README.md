@@ -48,24 +48,49 @@ This directory contains 14 detailed tasks for implementing the Lustre Template G
                               014_integration_testing
 ```
 
+## Task Status
+
+| # | Task | Status | Dependencies |
+|---|------|--------|--------------|
+| 001 | Project Setup | [x] Complete | None |
+| 002 | Types Module | [x] Complete | 001 |
+| 003 | Scanner Module | [x] Complete | 001 |
+| 004 | Cache Module | [x] Complete | 001 |
+| 005 | Parser Tokenizer | [x] Complete | 002 |
+| 006 | Parser AST Builder | [x] Complete | 002, 005 |
+| 007 | Codegen Basic | [x] Complete | 002, 004 |
+| 008 | Codegen Attributes | [x] Complete | 007 |
+| 009 | Codegen Control Flow | [x] Complete | 007, 008 |
+| 010 | Codegen Imports | [x] Complete | 007, 009 |
+| 011 | CLI Basic | [x] Complete | 003, 004, 006, 010 |
+| 012 | Orphan Cleanup | [x] Complete | 003, 004 |
+| 013 | Watch Mode | [x] Complete | 011, 012 |
+| 014 | Integration Testing | [x] Complete | 011, 012, 013 |
+
+Status legend:
+- `[ ] Pending` - Not started
+- `[~] In Progress` - Currently being worked on
+- `[x] Complete` - Finished and verified
+- `[!] Blocked` - Waiting on external dependency
+
 ## Task Summary
 
-| # | Task | Description | Dependencies |
-|---|------|-------------|--------------|
-| 001 | Project Setup | Initialize Gleam project with dependencies | None |
-| 002 | Types Module | Define all type definitions (Token, Node, etc.) | 001 |
-| 003 | Scanner Module | File discovery and path utilities | 001 |
-| 004 | Cache Module | Hash-based caching for regeneration | 001 |
-| 005 | Parser Tokenizer | Convert template text to tokens | 002 |
-| 006 | Parser AST Builder | Convert tokens to hierarchical AST | 002, 005 |
-| 007 | Codegen Basic | Generate code for elements and text | 002, 004 |
-| 008 | Codegen Attributes | Generate code for all attribute types | 007 |
-| 009 | Codegen Control Flow | Generate code for if/each/case | 007, 008 |
-| 010 | Codegen Imports | Smart import management | 007, 009 |
-| 011 | CLI Basic | Main entry point and file generation | 003, 004, 006, 010 |
-| 012 | Orphan Cleanup | Remove generated files without sources | 003, 004 |
-| 013 | Watch Mode | File watching and auto-regeneration | 011, 012 |
-| 014 | Integration Testing | End-to-end tests and CI setup | 011, 012, 013 |
+| # | Task | Description |
+|---|------|-------------|
+| 001 | Project Setup | Initialize Gleam project with dependencies |
+| 002 | Types Module | Define all type definitions (Token, Node, etc.) |
+| 003 | Scanner Module | File discovery and path utilities |
+| 004 | Cache Module | Hash-based caching for regeneration |
+| 005 | Parser Tokenizer | Convert template text to tokens |
+| 006 | Parser AST Builder | Convert tokens to hierarchical AST |
+| 007 | Codegen Basic | Generate code for elements and text |
+| 008 | Codegen Attributes | Generate code for all attribute types |
+| 009 | Codegen Control Flow | Generate code for if/each/case |
+| 010 | Codegen Imports | Smart import management |
+| 011 | CLI Basic | Main entry point and file generation |
+| 012 | Orphan Cleanup | Remove generated files without sources |
+| 013 | Watch Mode | File watching and auto-regeneration |
+| 014 | Integration Testing | End-to-end tests and CI setup |
 
 ## Recommended Execution Order
 
@@ -140,20 +165,20 @@ lustre_template_gen/
 
 ## Completion Checklist
 
-- [ ] 001: Project Setup
-- [ ] 002: Types Module
-- [ ] 003: Scanner Module
-- [ ] 004: Cache Module
-- [ ] 005: Parser Tokenizer
-- [ ] 006: Parser AST Builder
-- [ ] 007: Codegen Basic
-- [ ] 008: Codegen Attributes
-- [ ] 009: Codegen Control Flow
-- [ ] 010: Codegen Imports
-- [ ] 011: CLI Basic
-- [ ] 012: Orphan Cleanup
-- [ ] 013: Watch Mode
-- [ ] 014: Integration Testing
+- [x] 001: Project Setup
+- [x] 002: Types Module
+- [x] 003: Scanner Module
+- [x] 004: Cache Module
+- [x] 005: Parser Tokenizer
+- [x] 006: Parser AST Builder
+- [x] 007: Codegen Basic
+- [x] 008: Codegen Attributes
+- [x] 009: Codegen Control Flow
+- [x] 010: Codegen Imports
+- [x] 011: CLI Basic
+- [x] 012: Orphan Cleanup
+- [x] 013: Watch Mode
+- [x] 014: Integration Testing
 
 ## Notes
 

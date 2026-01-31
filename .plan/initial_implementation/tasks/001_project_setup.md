@@ -94,11 +94,11 @@ gleam deps download
 ```
 
 ## Verification Checklist
-- [ ] `gleam build` succeeds
-- [ ] `gleam test` runs without error
-- [ ] `gleam run -m lustre_template_gen` prints version
-- [ ] All 6 submodules exist and compile
-- [ ] Directory structure matches plan
+- [x] `gleam build` succeeds
+- [x] `gleam test` runs without error
+- [x] `gleam run -m lustre_template_gen` prints version
+- [x] All 6 submodules exist and compile
+- [x] Directory structure matches plan
 
 ## Notes
 - Keep all modules as minimal stubs initially

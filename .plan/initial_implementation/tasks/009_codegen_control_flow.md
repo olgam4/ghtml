@@ -543,15 +543,15 @@ pub fn generate_fragment_test() {
 ```
 
 ## Verification Checklist
-- [ ] `gleam build` succeeds
-- [ ] `gleam test` passes all control flow tests
-- [ ] If/else generates correct case expressions
-- [ ] If without else uses `none()`
-- [ ] Each generates keyed with list operations
-- [ ] Each with/without index both work
-- [ ] Case generates proper pattern matching
-- [ ] Nested control flow works
-- [ ] Multiple children use fragment
+- [x] `gleam build` succeeds
+- [x] `gleam test` passes all control flow tests
+- [x] If/else generates correct case expressions
+- [x] If without else uses `none()`
+- [x] Each generates keyed with list operations
+- [x] Each with/without index both work
+- [x] Case generates proper pattern matching
+- [x] Nested control flow works
+- [x] Multiple children use fragment
 
 ## Notes
 - Control flow nodes generate Gleam expressions, not statements
