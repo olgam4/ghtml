@@ -1,8 +1,8 @@
-<p align="center">
-  <img src="assets/logo.png" alt="lustre_template_gen logo" width="180">
-</p>
-
-# lustre_template_gen
+<h1 align="center">
+  <img src="assets/logo.png" alt="logo" width="80" valign="middle">
+  &nbsp;
+  lustre_template_gen
+</h1>
 
 [![test](https://github.com/burakcorekci/lustre_template_gen/actions/workflows/test.yml/badge.svg)](https://github.com/burakcorekci/lustre_template_gen/actions/workflows/test.yml)
 [![Package Version](https://img.shields.io/hexpm/v/lustre_template_gen)](https://hex.pm/packages/lustre_template_gen)
