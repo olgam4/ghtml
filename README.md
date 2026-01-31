@@ -15,10 +15,10 @@ gleam add lustre_template_gen@1
 ## Usage
 
 ```bash
-gleam run -m lustre_template_gen              # Generate all (skips unchanged)
-gleam run -m lustre_template_gen -- force     # Force regenerate all
-gleam run -m lustre_template_gen -- watch     # Watch mode
-gleam run -m lustre_template_gen -- clean     # Remove orphans only
+just run          # Generate all (skips unchanged)
+just run-force    # Force regenerate all
+just run-watch    # Watch mode
+just run-clean    # Remove orphans only
 ```
 
 ## Template Syntax
@@ -107,8 +107,9 @@ pub fn render(name: String, count: Int) -> Element(msg) {
 ## Development
 
 ```sh
-gleam build  # Build the project
-gleam test   # Run the tests
+just check   # Run all quality checks (build, test, integration, format, docs)
+just ci      # Simulate CI pipeline
+just g test  # Run tests only (passthrough to gleam)
 ```
 
 Further documentation at <https://hexdocs.pm/lustre_template_gen>.

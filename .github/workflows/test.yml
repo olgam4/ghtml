@@ -13,6 +13,7 @@ concurrency:
 
 env:
   GLEAM_VERSION: "1.14.0"
+  JUST_VERSION: "1.46.0"
 
 jobs:
   test:
@@ -20,6 +21,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup just
+        uses: extractions/setup-just@v2
+        with:
+          just-version: ${{ env.JUST_VERSION }}
 
       - name: Setup Beam
         uses: erlef/setup-beam@v1
@@ -56,7 +62,5 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gleam-
 
-      - run: gleam deps download
-      - run: gleam test
-      - run: gleam format --check src test
-      - run: gleam docs build
+      - name: Run CI checks
+        run: just g deps download && just ci
