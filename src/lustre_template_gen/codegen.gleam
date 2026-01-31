@@ -9,13 +9,48 @@ import gleam/result
 import gleam/string
 import lustre_template_gen/cache
 import lustre_template_gen/types.{
-  type Attr, type Node, type Template, Element, ExprNode, TextNode,
+  type Attr, type Node, type Template, BooleanAttr, DynamicAttr, Element,
+  EventAttr, ExprNode, StaticAttr, TextNode,
 }
 
 /// List of HTML void elements that cannot have children
 const void_elements = [
   "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta",
   "param", "source", "track", "wbr",
+]
+
+/// Known HTML attributes that have dedicated Lustre functions
+const known_attributes = [
+  #("class", "attribute.class"),
+  #("id", "attribute.id"),
+  #("href", "attribute.href"),
+  #("src", "attribute.src"),
+  #("alt", "attribute.alt"),
+  #("type", "attribute.type_"),
+  #("value", "attribute.value"),
+  #("name", "attribute.name"),
+  #("placeholder", "attribute.placeholder"),
+  #("disabled", "attribute.disabled"),
+  #("readonly", "attribute.readonly"),
+  #("checked", "attribute.checked"),
+  #("selected", "attribute.selected"),
+  #("autofocus", "attribute.autofocus"),
+  #("for", "attribute.for"),
+  #("role", "attribute.role"),
+  #("style", "attribute.style"),
+  #("width", "attribute.width"),
+  #("height", "attribute.height"),
+  #("title", "attribute.title"),
+  #("target", "attribute.target"),
+  #("rel", "attribute.rel"),
+  #("action", "attribute.action"),
+  #("method", "attribute.method"),
+  #("required", "attribute.required"),
+]
+
+/// Boolean attributes that should use dedicated functions for standard elements
+const boolean_attributes = [
+  "disabled", "readonly", "checked", "selected", "autofocus", "required",
 ]
 
 /// Generate Gleam code from a parsed template
@@ -37,11 +72,73 @@ fn extract_filename(path: String) -> String {
 }
 
 /// Generate import statements for the generated module
-fn generate_imports(_template: Template) -> String {
-  // For now, generate standard Lustre imports
-  // TODO: In future tasks, customize based on template content
-  "import lustre/element.{type Element, fragment, text}
+fn generate_imports(template: Template) -> String {
+  let base_imports =
+    "import lustre/element.{type Element, fragment, text}
 import lustre/element/html"
+
+  let needs_attrs = template_has_attrs(template.body)
+  let needs_events = template_has_events(template.body)
+
+  let imports = case needs_attrs, needs_events {
+    True, True ->
+      base_imports <> "\nimport lustre/attribute\nimport lustre/event"
+    True, False -> base_imports <> "\nimport lustre/attribute"
+    False, True -> base_imports <> "\nimport lustre/event"
+    False, False -> base_imports
+  }
+
+  imports
+}
+
+/// Check if any nodes have attributes
+fn template_has_attrs(nodes: List(Node)) -> Bool {
+  list.any(nodes, node_has_attrs)
+}
+
+/// Check if a node or its children have attributes
+fn node_has_attrs(node: Node) -> Bool {
+  case node {
+    Element(_, attrs, children, _) ->
+      has_non_event_attrs(attrs) || list.any(children, node_has_attrs)
+    _ -> False
+  }
+}
+
+/// Check if attrs list contains non-event attributes
+fn has_non_event_attrs(attrs: List(Attr)) -> Bool {
+  list.any(attrs, fn(attr) {
+    case attr {
+      StaticAttr(_, _) -> True
+      DynamicAttr(_, _) -> True
+      BooleanAttr(_) -> True
+      EventAttr(_, _) -> False
+    }
+  })
+}
+
+/// Check if any nodes have event attributes
+fn template_has_events(nodes: List(Node)) -> Bool {
+  list.any(nodes, node_has_events)
+}
+
+/// Check if a node or its children have events
+fn node_has_events(node: Node) -> Bool {
+  case node {
+    Element(_, attrs, children, _) ->
+      has_event_attrs(attrs) || list.any(children, node_has_events)
+    _ -> False
+  }
+}
+
+/// Check if attrs list contains event attributes
+fn has_event_attrs(attrs: List(Attr)) -> Bool {
+  list.any(attrs, fn(attr) {
+    case attr {
+      EventAttr(_, _) -> True
+      _ -> False
+    }
+  })
 }
 
 /// Check if a tag is a custom element (contains a hyphen)
@@ -114,18 +211,18 @@ fn generate_node_inline(node: Node) -> String {
 /// Generate code for an HTML element (inline format)
 fn generate_element_inline(
   tag: String,
-  _attrs: List(Attr),
+  attrs: List(Attr),
   children: List(Node),
 ) -> String {
-  let attrs_code = "[]"
-  // Placeholder, Task 008
+  let is_custom = is_custom_element(tag)
+  let attrs_code = generate_attrs(attrs, is_custom)
 
   let children_code = case is_void_element(tag) {
     True -> ""
     False -> generate_children_inline(children)
   }
 
-  case is_custom_element(tag) {
+  case is_custom {
     True ->
       "element(\""
       <> tag
@@ -137,6 +234,99 @@ fn generate_element_inline(
     False ->
       "html." <> tag <> "(" <> attrs_code <> ", [" <> children_code <> "])"
   }
+}
+
+/// Generate code for a list of attributes
+fn generate_attrs(attrs: List(Attr), is_custom: Bool) -> String {
+  case list.is_empty(attrs) {
+    True -> "[]"
+    False -> {
+      let attr_strings =
+        attrs
+        |> list.map(fn(attr) { generate_attr(attr, is_custom) })
+        |> string.join(", ")
+      "[" <> attr_strings <> "]"
+    }
+  }
+}
+
+/// Generate code for a single attribute
+fn generate_attr(attr: Attr, is_custom: Bool) -> String {
+  case attr {
+    StaticAttr(name, value) -> generate_static_attr(name, value)
+    DynamicAttr(name, expr) -> generate_dynamic_attr(name, expr)
+    EventAttr(event, handler) -> generate_event_attr(event, handler)
+    BooleanAttr(name) -> generate_boolean_attr(name, is_custom)
+  }
+}
+
+/// Generate code for a static attribute
+fn generate_static_attr(name: String, value: String) -> String {
+  case find_attr_function(name) {
+    Ok(func) -> func <> "(\"" <> escape_string(value) <> "\")"
+    Error(_) ->
+      "attribute.attribute(\""
+      <> name
+      <> "\", \""
+      <> escape_string(value)
+      <> "\")"
+  }
+}
+
+/// Generate code for a dynamic attribute
+fn generate_dynamic_attr(name: String, expr: String) -> String {
+  case find_attr_function(name) {
+    Ok(func) -> func <> "(" <> expr <> ")"
+    Error(_) -> "attribute.attribute(\"" <> name <> "\", " <> expr <> ")"
+  }
+}
+
+/// Generate code for a boolean attribute
+fn generate_boolean_attr(name: String, is_custom: Bool) -> String {
+  case is_custom {
+    True -> "attribute.attribute(\"" <> name <> "\", \"\")"
+    False -> {
+      case list.contains(boolean_attributes, name) {
+        True -> {
+          case find_attr_function(name) {
+            Ok(func) -> func <> "(True)"
+            Error(_) -> "attribute.attribute(\"" <> name <> "\", \"\")"
+          }
+        }
+        False -> "attribute.attribute(\"" <> name <> "\", \"\")"
+      }
+    }
+  }
+}
+
+/// Generate code for an event handler attribute
+fn generate_event_attr(event: String, handler: String) -> String {
+  case event {
+    "click" -> "event.on_click(" <> handler <> ")"
+    "input" -> "event.on_input(" <> handler <> ")"
+    "change" -> "event.on_change(" <> handler <> ")"
+    "submit" -> "event.on_submit(" <> handler <> ")"
+    "blur" -> "event.on_blur(" <> handler <> ")"
+    "focus" -> "event.on_focus(" <> handler <> ")"
+    "keydown" -> "event.on_keydown(" <> handler <> ")"
+    "keyup" -> "event.on_keyup(" <> handler <> ")"
+    "keypress" -> "event.on_keypress(" <> handler <> ")"
+    "mouseenter" -> "event.on_mouse_enter(" <> handler <> ")"
+    "mouseleave" -> "event.on_mouse_leave(" <> handler <> ")"
+    "mouseover" -> "event.on_mouse_over(" <> handler <> ")"
+    "mouseout" -> "event.on_mouse_out(" <> handler <> ")"
+    _ -> "event.on(\"" <> event <> "\", " <> handler <> ")"
+  }
+}
+
+/// Find the Lustre function for a known attribute
+fn find_attr_function(name: String) -> Result(String, Nil) {
+  list.find_map(known_attributes, fn(pair) {
+    case pair.0 == name {
+      True -> Ok(pair.1)
+      False -> Error(Nil)
+    }
+  })
 }
 
 /// Generate code for a text node with whitespace normalization (inline)
