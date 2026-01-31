@@ -1,0 +1,7 @@
+name = "e2e_test_project"
+version = "0.1.0"
+target = "erlang"
+
+[dependencies]
+gleam_stdlib = ">= 0.44.0 and < 2.0.0"
+lustre = ">= 5.0.0 and < 6.0.0"
