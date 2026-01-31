@@ -20,3 +20,18 @@ Read `CODEBASE.md` first for architecture overview, module guide, and key patter
 * Commit message should mention task id/name and short/concise description, ex: `005_parser_tokenizer: implemented parser tokenizer logic`
 * Commit your changes
 * Push changes to remote
+
+# Task Tracking (for epic-based work)
+When working on tasks from `.plan/<epic>/tasks/`:
+
+1. **Before starting a task:**
+   - Update the task status in `.plan/<epic>/tasks/README.md` from `[ ] Pending` to `[~] In Progress`
+
+2. **After completing a task:**
+   - Check off items in the task's verification checklist (the `- [ ]` items in the task file)
+   - Update the task status in `.plan/<epic>/tasks/README.md` from `[~] In Progress` to `[x] Complete`
+   - Update the completion checklist in `.plan/<epic>/PLAN.md` if one exists
+   - Include these tracking file updates in your commit
+
+3. **If blocked:**
+   - Update status to `[!] Blocked` with a note explaining the blocker
