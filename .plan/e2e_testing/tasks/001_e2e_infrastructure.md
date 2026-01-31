@@ -2,36 +2,32 @@
 
 ## Description
 
-Create the foundational infrastructure for E2E testing, including helper modules for temporary directory management, shell command execution, and the fixture directory structure.
+Create the foundational infrastructure for E2E testing, including helper modules for temporary directory management, shell command execution, and path utilities. This task assumes the test restructure (task 000) is complete.
 
 ## Dependencies
 
-- None - this is the first task.
+- 000_test_restructure - Needs the `test/e2e/` directory to exist
 
 ## Success Criteria
 
 1. `test/e2e/helpers.gleam` module exists with temp directory utilities
-2. `test/e2e/fixtures/` directory structure is created
-3. Helper functions for shell execution are working
+2. Helper functions for shell execution are working
+3. Path helpers point to correct directories (shared fixtures, e2e dir)
 4. All helper functions have corresponding tests
 
 ## Implementation Steps
 
-### 1. Create E2E Directory Structure
+### 1. Create E2E Helper Module
 
-Create the following directory structure:
+Create `test/e2e/helpers.gleam` in the existing `test/e2e/` directory (created in task 000):
 
 ```
 test/
-└── e2e/
-    ├── helpers.gleam
-    └── fixtures/
-        ├── project_template/
-        │   └── .gitkeep
-        ├── templates/
-        │   └── .gitkeep
-        └── generated/
-            └── .gitkeep
+├── e2e/
+│   ├── helpers.gleam          # Created in this task
+│   └── project_template/      # Created in task 002
+│       └── .gitkeep
+└── fixtures/                  # Existing shared fixtures (not modified)
 ```
 
 ### 2. Implement Temp Directory Helpers
@@ -42,12 +38,15 @@ Create `test/e2e/helpers.gleam` with utilities for:
 import gleam/result
 import simplifile
 
+/// Base directory for test artifacts (gitignored)
+const test_base = ".test"
+
 /// Creates a temporary directory for E2E testing
 /// Returns the path to the created directory
+/// Uses .test/ directory (gitignored) for visibility during debugging
 pub fn create_temp_dir(prefix: String) -> Result(String, simplifile.FileError) {
-  let base = "/tmp/lustre_template_gen_e2e"
   let timestamp = get_timestamp()
-  let path = base <> "/" <> prefix <> "_" <> timestamp
+  let path = test_base <> "/e2e_" <> prefix <> "_" <> timestamp
 
   use _ <- result.try(simplifile.create_directory_all(path))
   Ok(path)
@@ -93,27 +92,27 @@ pub fn gleam_build(project_dir: String) -> CommandResult {
 }
 ```
 
-### 4. Add Fixture Path Helpers
+### 4. Add Path Helpers
 
 ```gleam
-/// Returns the path to the E2E fixtures directory
+/// Returns the path to the shared fixtures directory
 pub fn fixtures_dir() -> String {
-  "test/e2e/fixtures"
+  "test/fixtures"
+}
+
+/// Returns the path to the E2E directory
+pub fn e2e_dir() -> String {
+  "test/e2e"
 }
 
 /// Returns the path to the project template fixture
 pub fn project_template_dir() -> String {
-  fixtures_dir() <> "/project_template"
+  e2e_dir() <> "/project_template"
 }
 
-/// Returns the path to the template fixtures directory
-pub fn templates_dir() -> String {
-  fixtures_dir() <> "/templates"
-}
-
-/// Returns the path to the generated modules directory
+/// Returns the path to the generated SSR modules directory
 pub fn generated_dir() -> String {
-  fixtures_dir() <> "/generated"
+  e2e_dir() <> "/generated"
 }
 ```
 
@@ -160,18 +159,18 @@ pub fn copy_directory_test() {
 }
 ```
 
-### Test 3: Fixture Path Resolution
+### Test 3: Path Resolution
 
 ```gleam
-pub fn fixture_paths_test() {
+pub fn path_helpers_test() {
   helpers.fixtures_dir()
-  |> should.equal("test/e2e/fixtures")
+  |> should.equal("test/fixtures")
+
+  helpers.e2e_dir()
+  |> should.equal("test/e2e")
 
   helpers.project_template_dir()
-  |> should.equal("test/e2e/fixtures/project_template")
-
-  helpers.templates_dir()
-  |> should.equal("test/e2e/fixtures/templates")
+  |> should.equal("test/e2e/project_template")
 }
 ```
 
@@ -190,10 +189,12 @@ pub fn fixture_paths_test() {
 - Using `simplifile` for file operations as it's already a project dependency
 - Timestamp generation uses Erlang's monotonic time for uniqueness
 - Shell execution may need platform-specific handling (Unix vs Windows)
-- The generated/ directory is for pre-generated SSR test modules (task 006)
+- Shared fixtures at `test/fixtures/` are used by unit, integration, and e2e tests
+- The generated/ directory (task 006) will hold pre-generated SSR test modules
+- Uses `.test/` directory (already gitignored) for temp files - consistent with existing tests
+- `.test/` is preferred over `/tmp/` for easier debugging and project isolation
 
 ## Files to Modify
 
 - `test/e2e/helpers.gleam` - Create new module with utility functions
-- `test/e2e/helpers_test.gleam` - Create tests for helpers
-- `test/e2e/fixtures/.gitkeep` files - Create placeholder files for git tracking
+- `test/e2e/helpers_test.gleam` - Create tests for helpers (or inline in helpers.gleam)

@@ -11,7 +11,7 @@ Create tests that use Lustre's `element.to_string()` to verify that generated co
 
 ## Success Criteria
 
-1. `test/e2e/e2e_ssr_test.gleam` exists with SSR verification tests
+1. `test/e2e/ssr_test.gleam` exists with SSR verification tests
 2. Tests cover all generated modules (basic, attributes, control_flow, events, fragments, custom_elements)
 3. Tests verify specific HTML structure, not just that rendering succeeds
 4. Tests catch regressions in generated code
@@ -20,7 +20,7 @@ Create tests that use Lustre's `element.to_string()` to verify that generated co
 
 ### 1. Create SSR Test Module
 
-Create `test/e2e/e2e_ssr_test.gleam`:
+Create `test/e2e/ssr_test.gleam`:
 
 ```gleam
 import gleeunit/should
@@ -328,5 +328,5 @@ All test cases are defined in the implementation steps above. Summary:
 
 ## Files to Modify
 
-- `test/e2e/e2e_ssr_test.gleam` - Create SSR HTML verification tests
+- `test/e2e/ssr_test.gleam` - Create SSR HTML verification tests
 - `test/e2e/generated/types.gleam` - May need types module for test data

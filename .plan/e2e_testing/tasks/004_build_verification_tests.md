@@ -12,7 +12,7 @@ Create E2E tests that verify generated `.gleam` code actually compiles in a real
 
 ## Success Criteria
 
-1. `test/e2e/e2e_build_test.gleam` exists with build verification tests
+1. `test/e2e/build_test.gleam` exists with build verification tests
 2. Tests generate code from each fixture and verify compilation
 3. All generated code compiles successfully with `gleam build`
 4. Tests clean up temp directories after execution
@@ -22,7 +22,7 @@ Create E2E tests that verify generated `.gleam` code actually compiles in a real
 
 ### 1. Create Build Test Module
 
-Create `test/e2e/e2e_build_test.gleam`:
+Create `test/e2e/build_test.gleam`:
 
 ```gleam
 import gleam/list
@@ -48,8 +48,8 @@ pub fn all_fixtures_compile_test() {
     project_dir,
   )
 
-  // Generate from all fixtures
-  let assert Ok(fixtures) = simplifile.get_files(helpers.templates_dir())
+  // Generate from all shared fixtures
+  let assert Ok(fixtures) = simplifile.get_files(helpers.fixtures_dir())
   let lustre_files = list.filter(fixtures, fn(f) {
     string.ends_with(f, ".lustre")
   })
@@ -85,46 +85,48 @@ Add separate tests for each fixture for better error isolation:
 
 ```gleam
 pub fn basic_fixture_compiles_test() {
-  test_fixture_compiles("basic")
+  test_fixture_compiles("simple/basic")
 }
 
 pub fn attributes_fixture_compiles_test() {
-  test_fixture_compiles("attributes")
+  test_fixture_compiles("attributes/all_attrs")
 }
 
 pub fn control_flow_fixture_compiles_test() {
-  test_fixture_compiles("control_flow")
+  test_fixture_compiles("control_flow/full")
 }
 
 pub fn events_fixture_compiles_test() {
-  test_fixture_compiles("events")
+  test_fixture_compiles("events/handlers")
 }
 
 pub fn fragments_fixture_compiles_test() {
-  test_fixture_compiles("fragments")
+  test_fixture_compiles("fragments/multiple_roots")
 }
 
 pub fn custom_elements_fixture_compiles_test() {
-  test_fixture_compiles("custom_elements")
+  test_fixture_compiles("custom_elements/web_components")
 }
 
 /// Helper to test a single fixture compiles
-fn test_fixture_compiles(fixture_name: String) {
-  let assert Ok(temp_dir) = helpers.create_temp_dir(fixture_name <> "_test")
+/// fixture_path is relative to test/fixtures/, e.g. "simple/basic"
+fn test_fixture_compiles(fixture_rel_path: String) {
+  let name = get_filename(fixture_rel_path)
+  let assert Ok(temp_dir) = helpers.create_temp_dir(name <> "_test")
   let project_dir = temp_dir <> "/project"
 
-  // Copy template
+  // Copy project template
   let assert Ok(Nil) = helpers.copy_directory(
     helpers.project_template_dir(),
     project_dir,
   )
 
   // Generate from fixture
-  let fixture_path = helpers.templates_dir() <> "/" <> fixture_name <> ".lustre"
+  let fixture_path = helpers.fixtures_dir() <> "/" <> fixture_rel_path <> ".lustre"
   let assert Ok(content) = simplifile.read(fixture_path)
   let assert Ok(template) = parser.parse(content)
 
-  let output_path = project_dir <> "/src/" <> fixture_name <> ".gleam"
+  let output_path = project_dir <> "/src/" <> name <> ".gleam"
   let hash = cache.hash_content(content)
   let generated = codegen.generate(template, fixture_path, hash)
 
@@ -229,4 +231,4 @@ The `invalid_gleam_fails_to_compile_test` verifies the test harness correctly de
 
 ## Files to Modify
 
-- `test/e2e/e2e_build_test.gleam` - Create build verification test module
+- `test/e2e/build_test.gleam` - Create build verification test module

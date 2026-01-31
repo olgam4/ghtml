@@ -7,9 +7,9 @@ This directory contains individual task specifications for the E2E Testing epic.
 ## Task Naming Convention
 
 Tasks are named with a three-digit prefix followed by a descriptive name:
+- `000_test_restructure.md`
 - `001_e2e_infrastructure.md`
 - `002_project_template_fixture.md`
-- `003_template_test_fixtures.md`
 
 The numbering indicates a recommended execution order, though tasks can be executed in parallel if their dependencies are satisfied.
 
@@ -17,14 +17,16 @@ The numbering indicates a recommended execution order, though tasks can be execu
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 001 | E2E Test Infrastructure | [ ] Pending | |
+| 000 | Test Restructure | [ ] Pending | Prerequisite for all other tasks |
+| 001 | E2E Test Infrastructure | [ ] Pending | Depends on 000 |
 | 002 | Project Template Fixture | [ ] Pending | Depends on 001 |
-| 003 | Template Test Fixtures | [ ] Pending | Depends on 001 |
+| 003 | Fixture Enhancement | [ ] Pending | Depends on 000; enhances existing fixtures |
 | 004 | Build Verification Tests | [ ] Pending | Depends on 001, 002, 003 |
-| 005 | Add Lustre Dev Dependency | [ ] Pending | |
+| 005 | Add Lustre Dev Dependency | [ ] Pending | Independent |
 | 006 | SSR Test Modules | [ ] Pending | Depends on 003, 005 |
 | 007 | SSR HTML Tests | [ ] Pending | Depends on 005, 006 |
-| 008 | Justfile Integration | [ ] Pending | Depends on 004, 007 |
+| 008 | Justfile Integration | [ ] Pending | Depends on 000, 004, 007 |
+| 009 | Slim Integration Tests | [ ] Pending | Depends on 007; removes redundant tests |
 
 Status legend:
 - `[ ] Pending` - Not started
@@ -40,9 +42,16 @@ Status legend:
 4. **Run full checks** - Use `just check` before marking complete
 5. **Commit atomically** - Each task should result in a single commit
 
+## Parallel Execution
+
+The following tasks can be worked on in parallel:
+- Task 000 must complete first (prerequisite)
+- After 000: Tasks 001, 003, and 005 can run in parallel
+- Tasks 006 and 004 can run in parallel once their deps are met
+
 ## Adding New Tasks
 
-1. Copy `000_template_task.md` to `NNN_task_name.md`
+1. Copy an existing task file as a template
 2. Fill in all sections
 3. Update this README with the new task
 4. Update the parent PLAN.md task table and dependency graph

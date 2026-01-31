@@ -13,15 +13,29 @@ The current test suite validates parsing, AST generation, and code generation in
 3. Render components using Lustre's `element.to_string()` SSR functionality
 4. Verify the HTML output matches expectations
 
+### Testing Pyramid
+
+This epic establishes a clear testing pyramid:
+
+```
+           /\
+          /  \  E2E: Build + SSR (high confidence, slow)
+         /    \
+        /------\  Integration: Error handling + edge cases
+       /        \
+      /----------\  Unit: parser, codegen, cache (fast, isolated)
+```
+
 ## Scope
 
 ### In Scope
-- E2E test infrastructure (temp directories, shell utilities, fixture management)
+- Test directory restructure (unit/integration/e2e)
+- E2E test infrastructure (temp directories, shell utilities)
 - Project template fixture for compilation tests
-- Template test fixtures covering all syntax features
 - Build verification tests that run `gleam build` on generated code
 - SSR tests using `element.to_string()` to verify HTML output
-- Justfile integration with `just e2e` command
+- Justfile integration with selective test commands
+- Slimming down integration tests to remove redundancy
 
 ### Out of Scope
 - Browser-based testing (Playwright, Cypress, etc.)
@@ -31,13 +45,53 @@ The current test suite validates parsing, AST generation, and code generation in
 
 ## Design Overview
 
-The E2E tests are organized in two layers:
+### Test Directory Structure
+
+The test directory is organized by test type:
+
+```
+test/
+├── unit/                         # Fast, isolated module tests
+│   ├── scanner_test.gleam
+│   ├── cli_test.gleam
+│   ├── cache_test.gleam
+│   ├── watcher_test.gleam
+│   ├── types_test.gleam
+│   ├── parser/
+│   │   ├── tokenizer_test.gleam
+│   │   └── ast_test.gleam
+│   └── codegen/
+│       ├── basic_test.gleam
+│       ├── attributes_test.gleam
+│       ├── control_flow_test.gleam
+│       └── imports_test.gleam
+├── integration/                  # Pipeline + error handling tests
+│   └── pipeline_test.gleam
+├── e2e/                          # Compilation + SSR tests
+│   ├── helpers.gleam
+│   ├── build_test.gleam
+│   ├── ssr_test.gleam
+│   └── project_template/         # Minimal Lustre project skeleton
+│       ├── gleam.toml
+│       └── src/
+│           ├── main.gleam
+│           └── types.gleam
+└── fixtures/                     # Shared across all test types
+    ├── simple/
+    │   └── basic.lustre
+    ├── attributes/
+    │   └── all_attrs.lustre
+    └── control_flow/
+        └── full.lustre
+```
+
+### E2E Test Layers
 
 ```
                     ┌────────────────────────────────────────────┐
                     │            Layer 1: Build Tests            │
                     │  - Copy project template to temp dir       │
-                    │  - Generate .gleam from .lustre fixtures   │
+                    │  - Generate .gleam from shared fixtures    │
                     │  - Run `gleam build` and verify success    │
                     └────────────────────────────────────────────┘
                                          │
@@ -48,55 +102,50 @@ The E2E tests are organized in two layers:
                     │  - Call render() functions directly        │
                     │  - Verify HTML via element.to_string()     │
                     └────────────────────────────────────────────┘
-
-Test Structure:
-test/
-└── e2e/
-    ├── helpers.gleam              # Temp dir, shell utilities
-    ├── e2e_build_test.gleam       # Build verification tests
-    ├── e2e_ssr_test.gleam         # SSR HTML tests
-    ├── fixtures/
-    │   ├── project_template/      # Minimal Lustre project
-    │   │   ├── gleam.toml
-    │   │   └── src/
-    │   │       ├── main.gleam
-    │   │       └── types.gleam
-    │   └── templates/
-    │       ├── basic.lustre
-    │       ├── attributes.lustre
-    │       ├── control_flow.lustre
-    │       └── events.lustre
-    └── generated/                 # Pre-generated SSR test modules
-        └── .gitkeep
 ```
+
+### Key Design Decisions
+
+1. **Single Fixture Set**: E2E tests use existing `test/fixtures/` rather than creating duplicate fixtures. New fixtures are added there if needed.
+
+2. **Selective Execution**: Justfile provides `just unit`, `just integration`, `just e2e` for running specific test types.
+
+3. **Integration Test Scope**: After E2E tests exist, integration tests focus on error handling and edge cases only - not string pattern verification.
 
 ## Task Breakdown
 
 | # | Task | Description | Dependencies |
 |---|------|-------------|--------------|
-| 001 | E2E Test Infrastructure | Create test helpers, temp dir utilities, fixture structure | None |
+| 000 | Test Restructure | Reorganize tests into unit/integration/e2e directories | None |
+| 001 | E2E Test Infrastructure | Create test helpers, temp dir utilities | 000 |
 | 002 | Project Template Fixture | Create minimal Lustre project skeleton for build tests | 001 |
-| 003 | Template Test Fixtures | Create .lustre fixtures covering all syntax features | 001 |
+| 003 | Fixture Enhancement | Add missing fixtures to test/fixtures/ for full coverage | 000 |
 | 004 | Build Verification Tests | Tests that generate code and run `gleam build` | 001, 002, 003 |
 | 005 | Add Lustre Dev Dependency | Add lustre to gleam.toml for SSR testing | None |
 | 006 | SSR Test Modules | Pre-generate test modules for SSR tests | 003, 005 |
 | 007 | SSR HTML Tests | Tests using element.to_string() to verify HTML | 005, 006 |
-| 008 | Justfile Integration | Add e2e commands and update check workflow | 004, 007 |
+| 008 | Justfile Integration | Add e2e commands and update check workflow | 000, 004, 007 |
+| 009 | Slim Integration Tests | Remove redundant string checks from pipeline_test | 007 |
 
 ## Task Dependency Graph
 
 ```
-001_e2e_infrastructure ────────┬──────────────────────────────┐
-         │                     │                              │
-         ▼                     ▼                              ▼
-002_project_template    003_template_fixtures         005_lustre_dependency
-         │                     │                              │
-         └─────────┬───────────┘                              │
-                   │                                          │
-                   ▼                                          │
-         004_build_tests                                      │
-                   │                                          │
-                   │              ┌───────────────────────────┘
+000_test_restructure ─────────────────┬──────────────────────────────┐
+         │                            │                              │
+         │                            ▼                              │
+         │                   003_fixture_enhancement                 │
+         │                            │                              │
+         ▼                            │                              │
+001_e2e_infrastructure                │                    005_lustre_dependency
+         │                            │                              │
+         ▼                            │                              │
+002_project_template                  │                              │
+         │                            │                              │
+         └─────────┬──────────────────┘                              │
+                   │                                                 │
+                   ▼                                                 │
+         004_build_tests                                             │
+                   │              ┌──────────────────────────────────┘
                    │              │
                    │              ▼
                    │    006_ssr_test_modules
@@ -104,19 +153,25 @@ test/
                    │              ▼
                    │    007_ssr_html_tests
                    │              │
-                   └──────┬───────┘
-                          │
-                          ▼
+                   └──────┬───────┤
+                          │       │
+                          ▼       │
                008_justfile_integration
+                                  │
+                                  ▼
+                     009_slim_integration_tests
 ```
 
 ## Success Criteria
 
-1. `just e2e` runs all E2E tests and passes
-2. `just check` includes E2E tests and passes
-3. Breaking a template intentionally causes E2E tests to fail
-4. SSR tests verify actual HTML output from Lustre's `element.to_string()`
-5. All fixtures cover the full range of template syntax features
+1. `just unit` runs fast unit tests
+2. `just integration` runs integration tests
+3. `just e2e` runs all E2E tests and passes
+4. `just check` includes all test types and passes
+5. Breaking a template intentionally causes E2E tests to fail
+6. SSR tests verify actual HTML output from Lustre's `element.to_string()`
+7. Integration tests focus on error handling, not string pattern verification
+8. Shared fixtures cover the full range of template syntax features
 
 ## Risks and Mitigations
 
@@ -126,11 +181,13 @@ test/
 | Shell execution differs across platforms | Medium | Use Gleam's shellout or simplifile for cross-platform support |
 | Temp directory cleanup fails | Low | Use try/finally patterns; add manual cleanup command |
 | Build tests are slow | Medium | Run only on CI or via explicit command; parallelize where possible |
+| Test restructure breaks imports | Medium | Use git mv to preserve history; verify all tests pass after move |
 
 ## Open Questions
 
 - [x] Should E2E tests run in `just check` or only `just ci`? → Include in `just check`
 - [x] Which Lustre version to pin? → Latest stable (will determine during task 005)
+- [x] Should we create new E2E fixtures? → No, use existing `test/fixtures/` and enhance as needed
 
 ## References
 

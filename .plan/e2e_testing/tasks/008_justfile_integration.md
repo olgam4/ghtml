@@ -2,10 +2,11 @@
 
 ## Description
 
-Add E2E test commands to the justfile and integrate them into the existing check and CI workflows. This ensures E2E tests are run as part of the standard development workflow.
+Add E2E test commands to the justfile and integrate them into the check and CI workflows. Task 000 establishes the basic `unit` and `integration` commands; this task adds `e2e` commands and updates workflows to include all test types.
 
 ## Dependencies
 
+- 000_test_restructure - Provides `unit` and `integration` commands
 - 004_build_verification_tests - Needs build tests to exist
 - 007_ssr_html_tests - Needs SSR tests to exist
 
@@ -22,36 +23,34 @@ Add E2E test commands to the justfile and integrate them into the existing check
 
 ### 1. Add E2E Test Commands
 
-Add the following commands to `justfile`:
+Add the following to the Testing section in `justfile` (after the existing `unit` and `integration` commands from task 000):
 
 ```just
-# === E2E Testing ===
-
-# Run all E2E tests (build verification + SSR)
+# Run E2E tests (slow - build verification + SSR)
 e2e:
-    gleam test -- --only e2e
+    gleam test test/e2e
     @echo "✓ E2E tests passed"
 
 # Run only build verification tests
 e2e-build:
-    gleam test -- --only e2e_build
+    gleam test test/e2e/build_test.gleam
     @echo "✓ Build verification tests passed"
 
 # Run only SSR HTML tests
 e2e-ssr:
-    gleam test -- --only e2e_ssr
+    gleam test test/e2e/ssr_test.gleam
     @echo "✓ SSR tests passed"
 ```
 
 ### 2. Update Check Workflow
 
-Modify the `check` recipe to include E2E tests:
+Modify the `check` recipe to include E2E tests (task 000 adds unit/integration):
 
 ```just
-# Run all quality checks (build → test → integration → e2e → format → docs)
+# Run all quality checks (build → unit → integration → e2e → format → docs)
 check:
     gleam build
-    gleam test
+    just unit
     just integration
     just e2e
     gleam format
@@ -67,7 +66,7 @@ Modify the `ci` recipe to include E2E tests:
 # Simulate CI pipeline (matches .github/workflows/test.yml)
 ci:
     gleam build
-    gleam test
+    just unit
     just integration
     just e2e
     gleam format --check src test
@@ -75,32 +74,34 @@ ci:
     @echo "✓ CI simulation passed"
 ```
 
-### 4. Add E2E Regeneration Command
+### 4. Remove integration-cli Recipe
 
-Add command to regenerate SSR test modules:
+Remove the `integration-cli` recipe from the justfile. E2E tests now provide the same CLI verification (generating code and verifying it works) with better coverage.
+
+### 5. Add E2E Regeneration Command
+
+Add command to regenerate SSR test modules from shared fixtures:
 
 ```just
-# Regenerate E2E SSR test modules from fixtures
+# Regenerate E2E SSR test modules from shared fixtures
 e2e-regen:
     #!/usr/bin/env bash
     set -euo pipefail
     echo "Regenerating E2E SSR test modules..."
 
-    # Run generator on the templates directory
-    gleam run -m lustre_template_gen -- test/e2e/fixtures/templates
-
-    # Move generated files to the generated directory
-    for f in test/e2e/fixtures/templates/*.gleam; do
-        if [ -f "$f" ]; then
-            mv "$f" test/e2e/generated/
-        fi
+    # Run generator on each fixture subdirectory
+    for dir in test/fixtures/*/; do
+        gleam run -m lustre_template_gen -- "$dir"
     done
+
+    # Move generated files to e2e/generated
+    find test/fixtures -name "*.gleam" -exec mv {} test/e2e/generated/ \;
 
     gleam format test/e2e/generated
     echo "✓ E2E SSR test modules regenerated"
 ```
 
-### 5. Add Help Text
+### 6. Add Help Text
 
 Update the justfile header to document E2E commands:
 
@@ -115,7 +116,7 @@ Update the justfile header to document E2E commands:
 #   just run      - Run the template generator
 ```
 
-### 6. Organize Command Sections
+### 7. Organize Command Sections
 
 Reorganize the justfile to group related commands:
 
@@ -185,6 +186,7 @@ just --list
 - [ ] `just e2e-ssr` runs SSR tests only
 - [ ] `just check` includes E2E tests
 - [ ] `just ci` includes E2E tests
+- [ ] `integration-cli` recipe removed
 - [ ] Commands are visible in `just --list`
 - [ ] Code follows project conventions (see CLAUDE.md)
 - [ ] No regressions in existing functionality
@@ -196,8 +198,9 @@ just --list
 - The regeneration command uses the template generator on the fixtures directory
 - Consider adding a `just e2e-quick` command that skips build tests for faster iteration
 - CI workflow should match what's defined in `.github/workflows/test.yml`
+- Remove `integration-cli` recipe since e2e tests now provide the same verification (and more)
 
 ## Files to Modify
 
-- `justfile` - Add E2E commands and update workflows
+- `justfile` - Add E2E commands, remove `integration-cli`, update workflows
 - `.github/workflows/test.yml` - Update if needed to match CI recipe
