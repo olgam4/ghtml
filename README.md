@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.png" alt="lustre_template_gen logo" width="180">
+</p>
+
 # lustre_template_gen
 
 [![test](https://github.com/burakcorekci/lustre_template_gen/actions/workflows/test.yml/badge.svg)](https://github.com/burakcorekci/lustre_template_gen/actions/workflows/test.yml)
