@@ -1,4 +1,7 @@
-// Cache management for incremental rebuilds
+//// Cache management for incremental rebuilds.
+////
+//// Uses SHA-256 hashing to detect changes in source templates and skip
+//// regeneration when files are unchanged.
 
 import gleam/bit_array
 import gleam/crypto

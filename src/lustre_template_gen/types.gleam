@@ -1,3 +1,8 @@
+//// Type definitions for the Lustre template parser and code generator.
+////
+//// This module defines all core types including source positions, tokens,
+//// AST nodes, and the parsed template structure.
+
 import gleam/option.{type Option}
 
 /// Position in source file for error reporting

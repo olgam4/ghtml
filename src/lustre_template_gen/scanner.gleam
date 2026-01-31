@@ -1,4 +1,7 @@
-// File system scanner for template discovery
+//// File system scanner for template discovery.
+////
+//// Recursively finds `.lustre` template files and their generated `.gleam`
+//// counterparts, excluding common build and dependency directories.
 
 import gleam/list
 import gleam/string
