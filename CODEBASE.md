@@ -258,8 +258,8 @@ Each epic directory contains:
 
 ### Creating a New Epic
 
-1. Copy the template: `cp -r .plan/_template .plan/your_epic_name`
-2. Edit `PLAN.md` with your epic's details
+1. Run: `just epic your_epic_name`
+2. Edit `.plan/your_epic_name/PLAN.md` with your epic's details
 3. Create task files from `tasks/000_template_task.md`
 4. Update `tasks/README.md` with task status tracking
 
