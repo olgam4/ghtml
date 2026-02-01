@@ -228,7 +228,12 @@ e2e-regen:
     rm -f test/fixtures/edge_cases/special.gleam
 
     # Fix import paths for generated modules (types -> e2e/generated/types)
-    sed -i '' 's/^import types\./import e2e\/generated\/types./' test/e2e/generated/control_flow.gleam 2>/dev/null || true
+    # Use platform-specific sed syntax (macOS vs Linux)
+    if [[ "$(uname)" == "Darwin" ]]; then
+        sed -i '' 's/^import types\./import e2e\/generated\/types./' test/e2e/generated/control_flow.gleam
+    else
+        sed -i 's/^import types\./import e2e\/generated\/types./' test/e2e/generated/control_flow.gleam
+    fi
 
     # Format the generated files
     gleam format test/e2e/generated/
