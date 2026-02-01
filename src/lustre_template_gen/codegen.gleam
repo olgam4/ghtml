@@ -83,10 +83,15 @@ fn generate_imports(template: Template) -> String {
   let needs_each_index = template_has_each_with_index(template.body)
   let needs_element = template_has_custom_elements(template.body)
   let needs_html = template_has_html_elements(template.body)
+  let needs_text = template_needs_text(template.body)
   let user_imports = template.imports
 
   // Build element import items list
-  let element_items = ["type Element", "text"]
+  let element_items = ["type Element"]
+  let element_items = case needs_text {
+    True -> list.append(element_items, ["text"])
+    False -> element_items
+  }
   let element_items = case needs_element {
     True -> list.append(element_items, ["element"])
     False -> element_items
@@ -218,6 +223,27 @@ fn has_user_import(imports: List(String), module: String) -> Bool {
     || string.starts_with(imp, module <> "{")
     || imp == module
   })
+}
+
+/// Check if template needs `text` import
+fn template_needs_text(nodes: List(Node)) -> Bool {
+  list.any(nodes, node_needs_text)
+}
+
+/// Check if a node or its children need `text`
+fn node_needs_text(node: Node) -> Bool {
+  case node {
+    TextNode(_, _) -> True
+    ExprNode(_, _) -> True
+    IfNode(_, then_branch, else_branch, _) ->
+      list.any(then_branch, node_needs_text)
+      || list.any(else_branch, node_needs_text)
+    EachNode(_, _, _, body, _) -> list.any(body, node_needs_text)
+    CaseNode(_, branches, _) ->
+      list.any(branches, fn(b: CaseBranch) { list.any(b.body, node_needs_text) })
+    Element(_, _, children, _) -> list.any(children, node_needs_text)
+    Fragment(children, _) -> list.any(children, node_needs_text)
+  }
 }
 
 /// Check if any nodes have each nodes
@@ -558,7 +584,14 @@ fn generate_event_attr(event: String, handler: String) -> String {
     "mouseleave" -> "event.on_mouse_leave(" <> handler <> ")"
     "mouseover" -> "event.on_mouse_over(" <> handler <> ")"
     "mouseout" -> "event.on_mouse_out(" <> handler <> ")"
-    _ -> "event.on(\"" <> event <> "\", " <> handler <> ")"
+    _ -> {
+      // Strip "on:" prefix for custom event handlers (e.g., @on:keydown -> keydown)
+      let event_name = case string.starts_with(event, "on:") {
+        True -> string.drop_start(event, 3)
+        False -> event
+      }
+      "event.on(\"" <> event_name <> "\", " <> handler <> ")"
+    }
   }
 }
 

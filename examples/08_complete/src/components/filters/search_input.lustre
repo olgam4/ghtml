@@ -1,0 +1,26 @@
+@import(gleam/dynamic/decode)
+
+@params(
+  value: String,
+  placeholder: String,
+  on_change: decode.Decoder(msg),
+  on_clear: fn() -> msg,
+)
+
+<div class="relative">
+  <sl-input
+    value={value}
+    placeholder={placeholder}
+    @sl-input={on_change}
+  >
+    <span slot="prefix">Search</span>
+  </sl-input>
+  {#if value != ""}
+    <button
+      class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+      @click={on_clear()}
+    >
+      x
+    </button>
+  {/if}
+</div>

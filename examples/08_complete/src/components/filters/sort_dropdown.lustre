@@ -1,0 +1,27 @@
+@import(model.{type SortBy, SortByCreated, SortByDueDate, SortByPriority, SortByTitle})
+
+@params(
+  current_sort: SortBy,
+  on_change: fn(SortBy) -> msg,
+)
+
+<sl-dropdown>
+  <sl-button slot="trigger" caret>
+    {#case current_sort}
+      {:SortByCreated}
+        Sort: Created
+      {:SortByDueDate}
+        Sort: Due Date
+      {:SortByPriority}
+        Sort: Priority
+      {:SortByTitle}
+        Sort: Title
+    {/case}
+  </sl-button>
+  <sl-menu>
+    <sl-menu-item @click={on_change(SortByCreated)}>Created</sl-menu-item>
+    <sl-menu-item @click={on_change(SortByDueDate)}>Due Date</sl-menu-item>
+    <sl-menu-item @click={on_change(SortByPriority)}>Priority</sl-menu-item>
+    <sl-menu-item @click={on_change(SortByTitle)}>Title</sl-menu-item>
+  </sl-menu>
+</sl-dropdown>

@@ -1,0 +1,27 @@
+@import(model.{type Subtask})
+
+@params(
+  subtask: Subtask,
+  on_toggle: fn() -> msg,
+  on_delete: fn() -> msg,
+)
+
+<div class="flex items-center gap-2 py-1 group">
+  <input
+    type="checkbox"
+    checked={subtask.completed}
+    class="rounded border-gray-300"
+    @click={on_toggle()}
+  />
+  {#if subtask.completed}
+    <span class="flex-1 text-gray-500 line-through">{subtask.text}</span>
+  {:else}
+    <span class="flex-1 text-gray-700">{subtask.text}</span>
+  {/if}
+  <button
+    class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
+    @click={on_delete()}
+  >
+    x
+  </button>
+</div>
