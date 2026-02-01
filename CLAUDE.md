@@ -48,11 +48,11 @@ bd close <id>                 # Complete task
 ## Creating Work
 
 ```bash
-# Create epic with tasks
+# Create epic (note the ID, e.g., ghtml-a1b2)
 bd create "Epic: Feature Name" -p 0 --label epic
 
-# Create tasks under epic
-bd create "Implement parser" -p 1 --label task
+# Create tasks under epic (use --parent to link)
+bd create "Implement parser" -p 1 --label task --parent ghtml-a1b2
 
 # Add detailed description via comment
 bd comment <task-id> "

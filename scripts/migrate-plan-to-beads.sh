@@ -111,16 +111,19 @@ migrate_epic() {
 
     # Extract epic title
     local epic_title=$(parse_epic_title "$plan_file")
+    local epic_id=""
 
     # Check if epic already exists
     if issue_exists "Epic: $epic_title"; then
         log "  Epic already exists: Epic: $epic_title"
+        # Get existing epic ID
+        epic_id=$(bd list --json 2>/dev/null | jq -r --arg t "Epic: $epic_title" '.[] | select(.title == $t) | .id' | head -1)
     else
         if dry "Would create epic: Epic: $epic_title"; then
             ((epics_created++)) || true
         else
             log "  Creating epic: Epic: $epic_title"
-            bd create "Epic: $epic_title" -p 0 --label epic 2>/dev/null || true
+            epic_id=$(bd create "Epic: $epic_title" -p 0 --label epic --json 2>/dev/null | jq -r '.id')
             ((epics_created++)) || true
         fi
     fi
@@ -166,11 +169,16 @@ migrate_epic() {
         [ "$task_status" = "in_progress" ] && priority=1
         [ "$task_status" = "blocked" ] && priority=3
 
-        if dry "Would create task: [$task_num] $task_subject (status: $task_status)"; then
+        if dry "Would create task: [$task_num] $task_subject (status: $task_status, parent: $epic_id)"; then
             ((tasks_created++)) || true
         else
-            log "    [$task_num] Creating: $task_subject"
-            bd create "$task_subject" -p "$priority" --label task 2>/dev/null || true
+            log "    [$task_num] Creating: $task_subject (parent: $epic_id)"
+            # Create task with parent link to epic
+            if [ -n "$epic_id" ]; then
+                bd create "$task_subject" -p "$priority" --label task --parent "$epic_id" 2>/dev/null || true
+            else
+                bd create "$task_subject" -p "$priority" --label task 2>/dev/null || true
+            fi
             ((tasks_created++)) || true
 
             # Set in_progress if needed
