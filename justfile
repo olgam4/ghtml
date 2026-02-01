@@ -100,31 +100,31 @@ examples-clean:
 new-spec name:
     #!/usr/bin/env bash
     set -euo pipefail
-    if [ -d ".specs/{{name}}" ]; then
-        echo "Spec already exists: .specs/{{name}}"
+    if [ -d ".claude/specs/{{name}}" ]; then
+        echo "Spec already exists: .claude/specs/{{name}}"
         exit 1
     fi
-    mkdir -p ".specs/{{name}}/research"
-    cp .specs/_templates/README.md ".specs/{{name}}/"
-    cp .specs/_templates/requirements.md ".specs/{{name}}/"
-    cp .specs/_templates/design.md ".specs/{{name}}/"
+    mkdir -p ".claude/specs/{{name}}/research"
+    cp .claude/specs/_templates/README.md ".claude/specs/{{name}}/"
+    cp .claude/specs/_templates/requirements.md ".claude/specs/{{name}}/"
+    cp .claude/specs/_templates/design.md ".claude/specs/{{name}}/"
     if [[ "$(uname)" == "Darwin" ]]; then
-        sed -i '' 's/\[Feature Name\]/{{name}}/g' ".specs/{{name}}/README.md"
+        sed -i '' 's/\[Feature Name\]/{{name}}/g' ".claude/specs/{{name}}/README.md"
     else
-        sed -i 's/\[Feature Name\]/{{name}}/g' ".specs/{{name}}/README.md"
+        sed -i 's/\[Feature Name\]/{{name}}/g' ".claude/specs/{{name}}/README.md"
     fi
-    echo "Created .specs/{{name}}/"
+    echo "Created .claude/specs/{{name}}/"
     echo ""
     echo "Next steps:"
-    echo "  1. Edit .specs/{{name}}/requirements.md with EARS requirements"
-    echo "  2. Edit .specs/{{name}}/design.md with architecture"
+    echo "  1. Edit .claude/specs/{{name}}/requirements.md with EARS requirements"
+    echo "  2. Edit .claude/specs/{{name}}/design.md with architecture"
     echo "  3. Run: just new-epic {{name}}"
 
 # Create epic in Beads linked to spec folder
 new-epic name:
     #!/usr/bin/env bash
     set -euo pipefail
-    spec_dir=".specs/{{name}}"
+    spec_dir=".claude/specs/{{name}}"
     if [ ! -d "$spec_dir" ]; then
         echo "Spec folder not found. Create it first:"
         echo "  just new-spec {{name}}"
@@ -201,8 +201,8 @@ view-spec epic:
 
 # Find specs mentioning a topic
 find-specs topic:
-    @echo "Searching .specs/ for: {{topic}}"
-    @grep -r "{{topic}}" .specs/ --include="*.md" -l 2>/dev/null || echo "No matches found"
+    @echo "Searching .claude/specs/ for: {{topic}}"
+    @grep -r "{{topic}}" .claude/specs/ --include="*.md" -l 2>/dev/null || echo "No matches found"
 
 # List all epics with their spec locations
 list-epics:

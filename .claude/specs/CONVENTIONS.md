@@ -5,7 +5,7 @@
 Each feature has its own spec folder:
 
 ```
-.specs/
+.claude/specs/
 ├── _templates/              # Templates for new specs
 │   ├── README.md
 │   ├── requirements.md
@@ -66,12 +66,12 @@ THE merger agent SHALL auto-merge the PR
 
 ### Epic links to spec folder:
 ```bash
-bd create "Epic: Feature" --meta spec_dir=".specs/feature"
+bd create "Epic: Feature" --meta spec_dir=".claude/specs/feature"
 ```
 
 ### Task links to requirement:
 ```bash
-bd create "Implement X" --meta spec_file=".specs/feature/requirements.md" --meta implements="REQ-001"
+bd create "Implement X" --meta spec_file=".claude/specs/feature/requirements.md" --meta implements="REQ-001"
 ```
 
 ### Query tasks by spec:

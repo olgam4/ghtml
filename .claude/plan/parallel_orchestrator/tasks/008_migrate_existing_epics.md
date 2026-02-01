@@ -2,7 +2,10 @@
 
 ## Description
 
-Migrate all incomplete tasks from existing `.plan/` epics into Beads. This preserves the detailed specs in `.plan/` while enabling machine-queryable task tracking and parallel orchestration.
+Migrate all incomplete tasks from existing `.claude/plan/` epics into Beads AND move spec content to `.claude/specs/`. This consolidates the two approaches:
+- `.claude/specs/` becomes the home for feature specifications (requirements.md, design.md, research/)
+- `.claude/plan/` can be deprecated after migration (tasks tracked in Beads, specs in `.claude/specs/`)
+- Beads metadata links tasks to their spec files via `meta.spec_file`
 
 ## Dependencies
 
@@ -11,8 +14,8 @@ Migrate all incomplete tasks from existing `.plan/` epics into Beads. This prese
 ## Success Criteria
 
 1. Migration script created and tested
-2. All incomplete tasks from `.plan/` epics exist in Beads
-3. Beads tasks link to `.plan/` spec files via metadata
+2. All incomplete tasks from `.claude/plan/` epics exist in Beads
+3. Beads tasks link to `.claude/plan/` spec files via metadata
 4. Dependencies between tasks preserved
 5. Epic hierarchy preserved (parent/child relationships)
 6. No duplicate tasks created (idempotent migration)
@@ -57,7 +60,7 @@ Create `scripts/migrate-plan-to-beads.sh`:
 # ==============================================================================
 set -euo pipefail
 
-PLAN_DIR=".plan"
+PLAN_DIR=".claude/plan"
 DRY_RUN=false
 EPIC_FILTER=""
 
@@ -416,14 +419,14 @@ echo "PASS: all tasks have spec file links"
 - [ ] In-progress tasks marked as in_progress in beads
 - [ ] Dependencies between tasks preserved
 - [ ] Epic-to-task parent relationships created
-- [ ] `meta.spec_file` links to `.plan/` task files
+- [ ] `meta.spec_file` links to `.claude/plan/` task files
 - [ ] Migration is idempotent (safe to run multiple times)
 - [ ] Migration report generated
 - [ ] Justfile commands added
 
 ## Expected Migration
 
-Based on current `.plan/` epics:
+Based on current `.claude/plan/` epics:
 
 | Epic | Expected Tasks |
 |------|----------------|
@@ -442,13 +445,19 @@ After migration:
 3. **Run orchestrator**: `just orchestrate --epic <id>`
 4. **Reference specs**: `bd show <id>` shows `meta.spec_file`
 
-The `.plan/` files remain as detailed specs - Beads just tracks execution state.
+The `.claude/plan/` files remain as detailed specs - Beads just tracks execution state.
 
 ## Notes
 
-- The `.plan/` directory is NOT deleted - it remains as documentation
-- Beads tasks link back via `meta.spec_file` for reference
-- Workers can read the spec file for detailed instructions
+- After migration, `.claude/plan/` can be archived or removed
+- New specs go in `.claude/specs/<feature>/` (not `.claude/plan/`)
+- Beads tasks link to specs via `meta.spec_file` (pointing to `.claude/specs/`)
+- Workers read spec files for detailed instructions
+- The migration script should:
+  1. Create corresponding `.claude/specs/<epic>/` folders
+  2. Move/convert PLAN.md content to requirements.md and design.md
+  3. Move research/ folders to `.claude/specs/<epic>/research/`
+  4. Create Beads tasks linking to the new spec locations
 - Consider adding a `just task-spec <id>` command to quickly view linked spec
 
 ## Files to Modify

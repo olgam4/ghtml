@@ -13,4 +13,4 @@ See `design.md` for architecture and technical decisions.
 See `research/` for investigation notes and alternatives analysis.
 
 ## Related Tasks
-Query with: `bd list --json | jq '.issues[] | select(.meta.spec_dir == ".specs/[feature]")'`
+Query with: `bd list --json | jq '.issues[] | select(.meta.spec_dir == ".claude/specs/[feature]")'`
