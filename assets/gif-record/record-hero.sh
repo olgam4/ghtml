@@ -9,8 +9,11 @@ cd "$(dirname "$0")/../.."
 # ~1600px width at font-size 16 (~9.7px/col)
 # Note: generated code has long lines that will wrap slightly in 81-col panes
 COLS=164
-ROWS=28
+ROWS=32
 FONT_SIZE=16
+
+# Ensure output directories exist
+mkdir -p assets/tmp assets/gifs
 
 # 1. Clean generated files (not recorded)
 rm -f examples/01_simple/src/components/greeting.gleam
@@ -33,7 +36,7 @@ sleep 0.3
 # Start recording using script to create PTY with custom size
 script -q /dev/null bash -c "
   stty cols $COLS rows $ROWS 2>/dev/null
-  asciinema rec --overwrite -c 'tmux attach -t hero' assets/casts/hero.cast
+  asciinema rec --overwrite -c 'tmux attach -t hero' assets/tmp/hero.cast
 " &
 RECORD_PID=$!
 
@@ -74,16 +77,21 @@ tmux send-keys -t hero "bat -pp -l rust examples/01_simple/src/components/greeti
 
 sleep 10
 
-# End recording - kill recording process FIRST to avoid capturing detach message
+# End recording - just kill the recording process while content is displayed
 kill $RECORD_PID 2>/dev/null || true
-sleep 2
+wait $RECORD_PID 2>/dev/null || true
 tmux kill-session -t hero 2>/dev/null || true
 
+# Trim last 4 lines (termination artifacts) from cast file
+LINES=$(wc -l < assets/tmp/hero.cast)
+head -n $((LINES - 4)) assets/tmp/hero.cast > assets/tmp/hero_trimmed.cast
+mv assets/tmp/hero_trimmed.cast assets/tmp/hero.cast
+
 # Convert to GIF
-agg --theme dracula --font-size $FONT_SIZE assets/casts/hero.cast assets/gifs/hero_raw.gif
+agg --theme dracula --font-size $FONT_SIZE assets/tmp/hero.cast assets/gifs/hero_raw.gif
 
 # Crop 4 pixels from each edge to remove corner artifacts (with proper palette for quality)
 ffmpeg -y -i assets/gifs/hero_raw.gif -vf "crop=in_w-8:in_h-8:4:4,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" assets/gifs/hero.gif 2>/dev/null
-rm -f assets/gifs/hero_raw.gif
+rm -f assets/gifs/hero_raw.gif assets/tmp/hero.cast
 
 echo "Done! Created assets/gifs/hero.gif (${COLS}x${ROWS} @ font-size ${FONT_SIZE})"
