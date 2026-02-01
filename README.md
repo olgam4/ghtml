@@ -108,7 +108,8 @@ That's it. You're done. Go grab a coffee. ☕
   <img src="assets/gifs/features.gif" alt="Hash-based caching demo" width="650" />
 </p>
 
-<table width="100%">
+<div align="center">
+<table width="90%">
 <tr>
 <td valign="top" width="50%">
 
@@ -185,6 +186,7 @@ Web components work too. Tags with hyphens automatically use `element()`.
 </td>
 </tr>
 </table>
+</div>
 
 ---
 
