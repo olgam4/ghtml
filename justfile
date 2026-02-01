@@ -208,6 +208,16 @@ find-specs topic:
 list-epics:
     @bd list --json | jq -r '.[] | select(.labels[]? == "epic") | "\(.id)\t\(.meta.spec_dir // "no spec")\t\(.subject)"'
 
+# === Orchestration ===
+
+# Run parallel agent orchestrator
+orchestrate *args:
+    ./scripts/orchestrate.sh {{args}}
+
+# Preview orchestration without executing
+orchestrate-preview *args:
+    ./scripts/orchestrate.sh --dry-run {{args}}
+
 # === Planning ===
 
 # Create a new epic from template (e.g., just epic my_feature)
