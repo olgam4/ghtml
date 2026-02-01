@@ -23,7 +23,7 @@ Tasks are named with a three-digit prefix followed by a descriptive name:
 | 001 | Initialize Beads | [x] Complete | REQ-001 | |
 | 001b | Spec Structure Conventions | [x] Complete | REQ-006, REQ-007 | EARS, .specs/, justfile |
 | 002 | Core Orchestrator | [x] Complete | REQ-001,002,003 | Can parallel with 003, 004 |
-| 003 | Worker Agent | [ ] Pending | REQ-002 | Can parallel with 002, 004 |
+| 003 | Worker Agent | [x] Complete | REQ-002 | Can parallel with 002, 004 |
 | 004 | Merger Agent | [ ] Pending | REQ-005 | Can parallel with 002, 003 |
 | 005 | Justfile Integration | [ ] Pending | - | |
 | 006 | Crash Recovery Tests | [ ] Pending | REQ-003,004 | |
