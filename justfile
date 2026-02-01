@@ -214,9 +214,71 @@ list-epics:
 orchestrate *args:
     ./scripts/orchestrate.sh {{args}}
 
+# Run orchestrator for a specific epic
+orchestrate-epic epic max_agents="4":
+    ./scripts/orchestrate.sh --epic {{epic}} --max-agents {{max_agents}}
+
 # Preview orchestration without executing
 orchestrate-preview *args:
     ./scripts/orchestrate.sh --dry-run {{args}}
+
+# Show orchestration status from beads
+orchestrate-status:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "=== Ready Tasks ==="
+    bd ready 2>/dev/null || echo "No ready tasks"
+    echo ""
+    echo "=== In Progress ==="
+    bd list --status in_progress 2>/dev/null || echo "None in progress"
+    echo ""
+    echo "=== Active Worktrees ==="
+    git worktree list | grep -v "$(pwd)" || echo "No worktrees"
+    echo ""
+    echo "=== Open Agent PRs ==="
+    gh pr list --json number,title,headRefName \
+        --jq '.[] | select(.headRefName | startswith("agent/")) | "#\(.number): \(.title)"' \
+        2>/dev/null || echo "No agent PRs"
+
+# Spawn a single worker agent for a task
+worker task_id:
+    ./scripts/run-worker.sh {{task_id}}
+
+# Run the merger agent to process PRs
+merger *args:
+    ./scripts/run-merger.sh {{args}}
+
+# Clean up all worktrees
+worktree-clean:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "Removing worktrees..."
+    git worktree list --porcelain | grep "worktree" | cut -d' ' -f2 | \
+        grep -v "$(pwd)" | xargs -I{} git worktree remove {} --force 2>/dev/null || true
+    git worktree prune
+    echo "Done"
+
+# Remove a specific worktree
+worktree-remove task_id:
+    git worktree remove "../worktrees/{{task_id}}" --force 2>/dev/null || true
+    git branch -d "agent/{{task_id}}" 2>/dev/null || true
+
+# Show orchestration help
+orchestrate-help:
+    @echo "Parallel Orchestration Commands:"
+    @echo ""
+    @echo "  just orchestrate              Run orchestrator for all ready tasks"
+    @echo "  just orchestrate --epic X     Run for specific epic"
+    @echo "  just orchestrate-epic X       Shorthand for --epic"
+    @echo "  just orchestrate-status       Show current orchestration state"
+    @echo "  just orchestrate-preview      Preview what would run (dry-run)"
+    @echo ""
+    @echo "  just worker <task-id>         Spawn single worker agent"
+    @echo "  just merger                   Run merger to process PRs"
+    @echo "  just merger --dry-run         Preview merger actions"
+    @echo ""
+    @echo "  just worktree-clean           Remove all worktrees"
+    @echo "  just worktree-remove <id>     Remove specific worktree"
 
 # === Planning ===
 
