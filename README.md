@@ -104,13 +104,13 @@ That's it. You're done. Go grab a coffee. ☕
 
 ## Features
 
-<p align="center">
-  <img src="assets/gifs/features.gif" alt="Hash-based caching demo" width="80%" />
-</p>
-
 ### ⚡ Blazing Fast
 
 Hash-based caching means we only rebuild what changed. Run it a thousand times — if nothing changed, nothing rebuilds.
+
+<p align="center">
+  <img src="assets/gifs/features.gif" alt="Hash-based caching demo" width="80%" />
+</p>
 
 ### 👀 Watch Mode
 
