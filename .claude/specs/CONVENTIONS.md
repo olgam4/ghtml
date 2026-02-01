@@ -64,25 +64,32 @@ THE merger agent SHALL auto-merge the PR
 
 ## Linking Specs to Beads
 
-### Epic links to spec folder:
+Epics and specs are linked by naming convention: epic name matches spec folder name.
+
+### Create epic linked to spec:
 ```bash
-bd create "Epic: Feature" --meta spec_dir=".claude/specs/feature"
+# Creates epic with label spec:<name> and notes pointing to spec folder
+just new-epic feature-name
 ```
 
-### Task links to requirement:
+### Create task under epic:
 ```bash
-bd create "Implement X" --meta spec_file=".claude/specs/feature/requirements.md" --meta implements="REQ-001"
+just new-task <epic-id> "Task description"
 ```
 
-### Query tasks by spec:
+### Query by spec:
 ```bash
-bd list --json | jq '.issues[] | select(.meta.spec_file | contains("feature"))'
+# Find epic for a spec
+bd list --json | jq '.[] | select(.labels[]? | contains("spec:feature-name"))'
+
+# Find tasks under an epic
+bd list --parent <epic-id>
 ```
 
 ## Workflow
 
-1. `just new-spec feature-name` - Create spec folder
-2. Edit requirements.md with EARS requirements
-3. Edit design.md with architecture
+1. `just new-spec feature-name` - Create spec folder with templates
+2. Edit `requirements.md` with EARS requirements
+3. Edit `design.md` with architecture
 4. `just new-epic feature-name` - Create linked epic in Beads
-5. `just new-task <epic> "Task" REQ-001` - Create tasks implementing requirements
+5. `just new-task <epic-id> "Task"` - Create tasks under epic
