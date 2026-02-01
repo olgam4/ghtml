@@ -256,6 +256,28 @@ Each example is a standalone Gleam project with its own `gleam.toml` and `justfi
 | `gleeunit` | Testing (dev) |
 | `lustre` | For SSR testing (dev) |
 
+## Beads Workflow
+
+Beads is a git-backed issue tracker used for orchestration and multi-session task management.
+
+### Task Lifecycle
+1. Create: `bd create "Task subject" -p 1`
+2. Start: `bd update <id> --status in_progress`
+3. Complete: `bd close <id>`
+
+### Orchestration Metadata
+Tasks managed by orchestrator include metadata:
+- `meta.worktree` - Path to git worktree
+- `meta.branch` - Git branch name
+- `meta.agent_pid` - Agent process ID
+- `meta.pr_number` - GitHub PR number
+- `meta.phase` - Current phase (spawned|working|committed|pr_created|merged)
+
+### Querying
+- Ready tasks: `bd ready`
+- Active tasks: `bd list --status in_progress`
+- Full state: `bd list --json`
+
 ## Common Patterns
 
 ### Error Handling
