@@ -4780,14 +4780,14 @@ var Error$NotABrowser = () => new NotABrowser;
 function application(init, update2, view) {
   return new App(new None, init, update2, view, new$5(empty_list));
 }
-function simple(init, update2, view) {
-  let init$1 = (start_args) => {
-    return [init(start_args), none()];
-  };
-  let update$1 = (model, msg) => {
-    return [update2(model, msg), none()];
-  };
-  return application(init$1, update$1, view);
+function element4(view) {
+  return application((_) => {
+    return [undefined, none()];
+  }, (_, _1) => {
+    return [undefined, none()];
+  }, (_) => {
+    return view;
+  });
 }
 function start4(app, selector, start_args) {
   return guard(!is_browser(), new Error(new NotABrowser), () => {
@@ -4840,61 +4840,18 @@ function render3(url, label2, is_external) {
 
 // build/dev/javascript/example_02_attributes/app.mjs
 var FILEPATH = "src/app.gleam";
-
-class Model extends CustomType {
-  constructor(name, email, newsletter, terms) {
-    super();
-    this.name = name;
-    this.email = email;
-    this.newsletter = newsletter;
-    this.terms = terms;
-  }
-}
-
-class UserUpdatedName extends CustomType {
-  constructor($0) {
-    super();
-    this[0] = $0;
-  }
-}
-
-class UserUpdatedEmail extends CustomType {
-  constructor($0) {
-    super();
-    this[0] = $0;
-  }
-}
-
-class UserToggledNewsletter extends CustomType {
-}
-function init(_) {
-  return new Model("", "", true, false);
-}
-function update2(model, msg) {
-  if (msg instanceof UserUpdatedName) {
-    let name = msg[0];
-    return new Model(name, model.email, model.newsletter, model.terms);
-  } else if (msg instanceof UserUpdatedEmail) {
-    let email = msg[0];
-    return new Model(model.name, email, model.newsletter, model.terms);
-  } else if (msg instanceof UserToggledNewsletter) {
-    return new Model(model.name, model.email, !model.newsletter, model.terms);
-  } else {
-    return new Model(model.name, model.email, model.newsletter, !model.terms);
-  }
-}
-function view(model) {
+function view() {
   return div(toList([]), toList([
     h1(toList([]), toList([text3("Attributes Example")])),
     div(toList([class$("section")]), toList([
       h2(toList([]), toList([text3("Form Fields (Static + Dynamic Attributes)")])),
-      render2("Name", model.name, "Enter your name"),
-      render2("Email", model.email, "Enter your email")
+      render2("Name", "John Doe", "Enter your name"),
+      render2("Email", "john@example.com", "Enter your email")
     ])),
     div(toList([class$("section")]), toList([
       h2(toList([]), toList([text3("Checkboxes (Boolean Attributes)")])),
-      render("Subscribe to newsletter", model.newsletter),
-      render("Accept terms and conditions", model.terms)
+      render("Subscribe to newsletter", true),
+      render("Accept terms and conditions", false)
     ])),
     div(toList([class$("section")]), toList([
       h2(toList([]), toList([text3("Links (Conditional Attributes)")])),
@@ -4905,10 +4862,10 @@ function view(model) {
   ]));
 }
 function main() {
-  let app = simple(init, update2, view);
+  let app = element4(view());
   let $ = start4(app, "#app", undefined);
   if (!($ instanceof Ok)) {
-    throw makeError("let_assert", FILEPATH, "app", 10, "main", "Pattern match failed, no pattern matched the value.", { value: $, start: 235, end: 284, pattern_start: 246, pattern_end: 251 });
+    throw makeError("let_assert", FILEPATH, "app", 11, "main", "Pattern match failed, no pattern matched the value.", { value: $, start: 248, end: 297, pattern_start: 259, pattern_end: 264 });
   }
   return;
 }

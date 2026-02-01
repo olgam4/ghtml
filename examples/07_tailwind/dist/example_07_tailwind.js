@@ -294,6 +294,21 @@ function makeError(variant, file, module, line, fn, message, extra) {
     error[k] = extra[k];
   return error;
 }
+// build/dev/javascript/gleam_stdlib/gleam/order.mjs
+class Lt extends CustomType {
+}
+var Order$Lt = () => new Lt;
+class Eq extends CustomType {
+}
+var Order$Eq = () => new Eq;
+class Gt extends CustomType {
+}
+var Order$Gt = () => new Gt;
+
+// build/dev/javascript/gleam_stdlib/gleam/option.mjs
+class None extends CustomType {
+}
+
 // build/dev/javascript/gleam_stdlib/dict.mjs
 var referenceMap = /* @__PURE__ */ new WeakMap;
 var tempDataView = /* @__PURE__ */ new DataView(/* @__PURE__ */ new ArrayBuffer(8));
@@ -592,27 +607,12 @@ function hashbit(hash, shift) {
   return 1 << (hash >>> shift & mask);
 }
 
-// build/dev/javascript/gleam_stdlib/gleam/option.mjs
-class None extends CustomType {
-}
-
 // build/dev/javascript/gleam_stdlib/gleam/dict.mjs
 function keys(dict) {
   return fold(dict, toList([]), (acc, key, _) => {
     return prepend(key, acc);
   });
 }
-
-// build/dev/javascript/gleam_stdlib/gleam/order.mjs
-class Lt extends CustomType {
-}
-var Order$Lt = () => new Lt;
-class Eq extends CustomType {
-}
-var Order$Eq = () => new Eq;
-class Gt extends CustomType {
-}
-var Order$Gt = () => new Gt;
 
 // build/dev/javascript/gleam_stdlib/gleam/list.mjs
 class Ascending extends CustomType {
@@ -4935,33 +4935,6 @@ function update2(model, msg) {
     return new Model(model.button_clicks, model.show_success, !model.show_error);
   }
 }
-function int_to_string(n) {
-  if (n === 0) {
-    return "0";
-  } else if (n === 1) {
-    return "1";
-  } else if (n === 2) {
-    return "2";
-  } else if (n === 3) {
-    return "3";
-  } else if (n === 4) {
-    return "4";
-  } else if (n === 5) {
-    return "5";
-  } else if (n === 6) {
-    return "6";
-  } else if (n === 7) {
-    return "7";
-  } else if (n === 8) {
-    return "8";
-  } else if (n === 9) {
-    return "9";
-  } else {
-    let quotient = globalThis.Math.trunc(n / 10);
-    let remainder = n % 10;
-    return int_to_string(quotient) + int_to_string(remainder);
-  }
-}
 function view(model) {
   return div(toList([class$("min-h-screen bg-gray-100")]), toList([
     render6("Tailwind + Lustre", toList([
@@ -5020,7 +4993,7 @@ function view(model) {
         ]), toList([text3("Buttons")])),
         p(toList([class$("text-gray-600 mb-4")]), toList([
           text3("Buttons with Tailwind utilities for colors, spacing, hover states, and focus rings. Click count: "),
-          span(toList([class$("font-bold text-blue-600")]), toList([text3(int_to_string(model.button_clicks))]))
+          span(toList([class$("font-bold text-blue-600")]), toList([text3(to_string(model.button_clicks))]))
         ])),
         div(toList([class$("flex gap-4 flex-wrap")]), toList([
           render3("Primary Action", () => {
@@ -5063,7 +5036,7 @@ function main2() {
   let app = simple(init, update2, view);
   let $ = start4(app, "#app", undefined);
   if (!($ instanceof Ok)) {
-    throw makeError("let_assert", FILEPATH, "app", 15, "main", "Pattern match failed, no pattern matched the value.", { value: $, start: 368, end: 417, pattern_start: 379, pattern_end: 384 });
+    throw makeError("let_assert", FILEPATH, "app", 16, "main", "Pattern match failed, no pattern matched the value.", { value: $, start: 385, end: 434, pattern_start: 396, pattern_end: 401 });
   }
   return;
 }

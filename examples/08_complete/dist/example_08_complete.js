@@ -6069,9 +6069,9 @@ function render10(task, new_subtask_text, editing_subtask_id, editing_subtask_te
         let $ = !isEqual(task.subtasks, toList([]));
         if ($) {
           return ul(toList([class$("space-y-2 mb-3")]), toList([
-            fragment3(index_map(task.subtasks, (subtask, idx) => {
+            fragment3(map2(task.subtasks, (subtask) => {
               return [
-                to_string(idx),
+                subtask.id,
                 li(toList([
                   class$("flex items-center gap-2")
                 ]), toList([

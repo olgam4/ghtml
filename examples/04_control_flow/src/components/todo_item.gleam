@@ -1,5 +1,5 @@
 // @generated from todo_item.lustre
-// @hash 43a106f22ba0e16e6b9e761751e4447e12ccd5836fb33d0f442b641f57f1b549
+// @hash dbef3cd10667b9f5c4007daa8fa5858ad16868dfa40415c4d01245fb6e41281c
 // DO NOT EDIT - regenerate with: gleam run -m lustre_template_gen
 
 import lustre/element.{type Element, text}
@@ -9,5 +9,5 @@ import lustre/event
 import types.{type Todo, High, Medium, Low}
 
 pub fn render(t: Todo, on_toggle: fn() -> msg, on_delete: fn() -> msg) -> Element(msg) {
-  html.div([attribute.class("todo-item")], [html.input([attribute.type_("checkbox"), attribute.checked(True), event.on_click(on_toggle())]), html.span([attribute.class("text")], [case t.completed { True -> html.s([], [text(t.text)]) False -> text(t.text) }]), case t.priority { High -> html.span([attribute.class("priority high")], [text("!")]) Medium -> html.span([attribute.class("priority medium")], [text("-")]) Low -> html.span([attribute.class("priority low")], [text(".")]) }, html.button([attribute.class("delete"), event.on_click(on_delete())], [text("x")])])
+  html.div([attribute.class("todo-item")], [html.input([attribute.type_("checkbox"), attribute.checked(t.completed), event.on_click(on_toggle())]), html.span([attribute.class("text")], [case t.completed { True -> html.s([], [text(t.text)]) False -> text(t.text) }]), case t.priority { High -> html.span([attribute.class("priority high")], [text("!")]) Medium -> html.span([attribute.class("priority medium")], [text("-")]) Low -> html.span([attribute.class("priority low")], [text(".")]) }, html.button([attribute.class("delete"), event.on_click(on_delete())], [text("x")])])
 }

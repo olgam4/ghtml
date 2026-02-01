@@ -116,32 +116,22 @@ This example showcases all Lustre template features:
 ## Component Breakdown
 
 ### Layout Components
-- `app_shell.lustre` - Main layout wrapper
 - `sidebar.lustre` - Navigation sidebar with projects
 - `header.lustre` - Top header with search and controls
 - `mobile_nav.lustre` - Bottom navigation for mobile
 
 ### Task Components
-- `task_card.lustre` - Individual task card
-- `task_list.lustre` - List of tasks
-- `task_detail.lustre` - Full task view/edit
-- `task_form.lustre` - Create/edit form
-- `subtask_item.lustre` - Checklist item
-- `kanban_board.lustre` - Kanban view
+- `task_list.lustre` - List of tasks with inline card rendering
+- `task_detail.lustre` - Full task view with subtask management
+- `kanban_board.lustre` - Kanban board view
 
 ### Filter Components
-- `filter_bar.lustre` - Filter controls
-- `search_input.lustre` - Search box
-- `sort_dropdown.lustre` - Sort options
+- `filter_bar.lustre` - Filter and sort controls
 
 ### Dialog Components
 - `confirm_dialog.lustre` - Confirmation modal
-- `task_dialog.lustre` - Add/edit task modal
-- `export_dialog.lustre` - Export options
+- `export_dialog.lustre` - Export/import options
 
 ### Common Components
-- `button.lustre` - Button variants
-- `badge.lustre` - Status/priority badges
 - `empty_state.lustre` - Empty content placeholder
 - `toast.lustre` - Notification toast
-- `loading.lustre` - Loading spinner

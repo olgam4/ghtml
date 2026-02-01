@@ -5178,7 +5178,7 @@ function main() {
   let app = simple(init, update2, view);
   let $ = start4(app, "#app", undefined);
   if (!($ instanceof Ok)) {
-    throw makeError("let_assert", FILEPATH, "app", 10, "main", "Pattern match failed, no pattern matched the value.", { value: $, start: 223, end: 272, pattern_start: 234, pattern_end: 239 });
+    throw makeError("let_assert", FILEPATH, "app", 11, "main", "Pattern match failed, no pattern matched the value.", { value: $, start: 247, end: 296, pattern_start: 258, pattern_end: 263 });
   }
   return;
 }

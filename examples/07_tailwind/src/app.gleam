@@ -4,6 +4,7 @@ import components/button_primary
 import components/button_secondary
 import components/card
 import components/navbar
+import gleam/int
 import lustre
 import lustre/attribute
 import lustre/element.{type Element}
@@ -112,7 +113,7 @@ fn view(model: Model) -> Element(Msg) {
             ),
             html.span(
               [attribute.class("font-bold text-blue-600")],
-              [html.text(int_to_string(model.button_clicks))],
+              [html.text(int.to_string(model.button_clicks))],
             ),
           ],
         ),
@@ -178,22 +179,3 @@ fn view(model: Model) -> Element(Msg) {
   ])
 }
 
-fn int_to_string(n: Int) -> String {
-  case n {
-    0 -> "0"
-    1 -> "1"
-    2 -> "2"
-    3 -> "3"
-    4 -> "4"
-    5 -> "5"
-    6 -> "6"
-    7 -> "7"
-    8 -> "8"
-    9 -> "9"
-    _ -> {
-      let quotient = n / 10
-      let remainder = n % 10
-      int_to_string(quotient) <> int_to_string(remainder)
-    }
-  }
-}

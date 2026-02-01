@@ -5206,7 +5206,7 @@ function render4(t, on_toggle, on_delete) {
   return div(toList([class$("todo-item")]), toList([
     input(toList([
       type_("checkbox"),
-      checked(true),
+      checked(t.completed),
       on_click(on_toggle())
     ])),
     span(toList([class$("text")]), toList([

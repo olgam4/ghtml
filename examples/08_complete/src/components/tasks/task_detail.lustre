@@ -80,7 +80,7 @@
     </h3>
     {#if task.subtasks != []}
       <ul class="space-y-2 mb-3">
-        {#each task.subtasks as subtask, idx}
+        {#each task.subtasks as subtask}
           <li class="flex items-center gap-2">
             {#if editing_subtask_id == Some(subtask.id)}
               <sl-input

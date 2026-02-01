@@ -2,6 +2,7 @@ import components/counter
 import components/form
 import components/search_input
 import lustre
+import lustre/attribute
 import lustre/element.{type Element}
 import lustre/element/html
 
@@ -95,5 +96,3 @@ fn view(model: Model) -> Element(Msg) {
     ]),
   ])
 }
-
-import lustre/attribute
