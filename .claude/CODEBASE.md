@@ -265,18 +265,32 @@ Beads is a git-backed issue tracker used for orchestration and multi-session tas
 2. Start: `bd update <id> --status in_progress`
 3. Complete: `bd close <id>`
 
-### Orchestration Metadata
-Tasks managed by orchestrator include metadata:
-- `meta.worktree` - Path to git worktree
-- `meta.branch` - Git branch name
-- `meta.agent_pid` - Agent process ID
-- `meta.pr_number` - GitHub PR number
-- `meta.phase` - Current phase (spawned|working|committed|pr_created|merged)
+### Phase Tracking (Labels)
+Orchestrator tracks phases via labels:
+- `phase:spawned` - Worktree created, agent starting
+- `phase:working` - Agent actively implementing
+- `phase:committed` - Changes committed, ready for PR
+- `phase:pr_created` - PR created, awaiting merge
+- `phase:merged` - PR merged, task complete
+
+### Runtime State (Local)
+Runtime data stored in `.beads/orchestrator/state.json` (git-ignored):
+- `pid` - Agent process ID
+- `worktree` - Git worktree path
+- `pr_number` - GitHub PR number
 
 ### Querying
 - Ready tasks: `bd ready`
 - Active tasks: `bd list --status in_progress`
+- By phase: `bd list --json | jq '.[] | select(.labels[]? | contains("phase:working"))'`
 - Full state: `bd list --json`
+
+### Orchestration Commands
+See `.claude/docs/orchestration.md` for full guide. Quick reference:
+- `just orchestrate` - Run for all ready tasks
+- `just orchestrate-status` - Show current state
+- `just worker <id>` - Spawn single worker
+- `just merger` - Process PRs
 
 ## Common Patterns
 
