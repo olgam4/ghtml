@@ -108,14 +108,85 @@ That's it. You're done. Go grab a coffee. ☕
   <img src="assets/gifs/features.gif" alt="Hash-based caching demo" width="650" />
 </p>
 
-| | |
-|:--|:--|
-| **⚡ Blazing Fast** | **👀 Watch Mode** |
-| Hash-based caching means we only rebuild what changed. Run it a thousand times — if nothing changed, nothing rebuilds. | Change a file. Blink. It's regenerated. Your flow stays unbroken. |
-| **🎯 Control Flow** | **🧹 Auto Cleanup** |
-| `{#if}`, `{#each}`, `{#case}` — all the control flow you need, right in your templates. | Delete a `.lustre` file and we clean up the generated `.gleam` file automatically. No orphans left behind. |
-| **🎨 Events** | **🔧 Custom Elements** |
-| Event handlers with `@click`, `@input`, and more. | Web components work too. Tags with hyphens automatically use `element()`. |
+<div align="center">
+<table width="90%">
+<tr>
+<td valign="top" width="50%">
+
+### ⚡ Blazing Fast
+
+Hash-based caching means we only rebuild what changed. Run it a thousand times — if nothing changed, nothing rebuilds.
+
+</td>
+<td valign="top" width="50%">
+
+### 👀 Watch Mode
+
+<img src="assets/gifs/watch.gif" alt="Watch mode demo" width="100%" />
+
+Change a file. Blink. It's regenerated. Your flow stays unbroken.
+
+</td>
+</tr>
+<tr>
+<td valign="top" width="50%">
+
+### 🎯 Control Flow
+
+`{#if}`, `{#each}`, `{#case}` — all the control flow you need, right in your templates.
+
+```html
+{#if user.is_admin}
+  <span class="badge">Admin</span>
+{/if}
+
+{#each items as item}
+  <li>{item}</li>
+{/each}
+```
+
+</td>
+<td valign="top" width="50%">
+
+### 🧹 Auto Cleanup
+
+Delete a `.lustre` file and we clean up the generated `.gleam` file automatically. No orphans left behind.
+
+```sh
+gleam run -m lustre_template_gen -- clean
+```
+
+</td>
+</tr>
+<tr>
+<td valign="top" width="50%">
+
+### 🎨 Events
+
+Event handlers? We got 'em.
+
+```html
+<button @click={on_save}>Save</button>
+<input @input={handle_input} />
+```
+
+</td>
+<td valign="top" width="50%">
+
+### 🔧 Custom Elements
+
+Web components work too. Tags with hyphens automatically use `element()`.
+
+```html
+<my-component data={value}>
+  <slot-content />
+</my-component>
+```
+
+</td>
+</tr>
+</table>
+</div>
 
 ---
 
