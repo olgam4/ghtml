@@ -41,7 +41,7 @@ bd --version
 ### 2. Initialize Beads in Project
 
 ```bash
-cd /Users/burakpersonal/projects/lustre_template_gen
+cd /Users/burakpersonal/projects/ghtml
 bd init
 ```
 
@@ -55,7 +55,7 @@ Create or update `.beads/config.json`:
 
 ```json
 {
-  "project": "lustre_template_gen",
+  "project": "ghtml",
   "prefix": "lt",
   "default_priority": 2
 }

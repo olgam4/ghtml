@@ -1,4 +1,4 @@
-// @generated from sl_card.lustre
+// @generated from sl_card.ghtml
 // @hash d0c1bc2482d576e61c2a276299419f431e4b01b0b3ed9ce8e7e17d97cbfdda4e
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

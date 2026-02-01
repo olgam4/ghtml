@@ -1,4 +1,4 @@
-// @generated from user_badge.lustre
+// @generated from user_badge.ghtml
 // @hash 0ccec706cd584675c1439e297a00712b0410ffcb4253ab0db7ba3321311b8359
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

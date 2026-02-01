@@ -17,7 +17,7 @@ When a task is being dragged and hovers over a column:
 
 ## Files to Modify
 
-### 1. `examples/09_drag_drop/src/components/tasks/kanban_board.lustre`
+### 1. `examples/09_drag_drop/src/components/tasks/kanban_board.ghtml`
 
 **Add drop_target_column parameter**:
 

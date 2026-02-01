@@ -8,7 +8,7 @@ Implement mouse-based drag and drop to move tasks between Todo, In Progress, and
 ### What Exists
 - **Model** (`model.gleam:106`): `selected_task_id: Option(String)` tracks selection
 - **Messages** (`msg.gleam:28`): `SetTaskStatus(String, TaskStatus)` can change task status
-- **Kanban View** (`kanban_board.lustre`): 3 columns with task cards, click-to-select
+- **Kanban View** (`kanban_board.ghtml`): 3 columns with task cards, click-to-select
 - **Event Support**: Template generator supports `@on:eventname` for custom events like drag/drop
 
 ### What's Missing
@@ -64,12 +64,12 @@ Add to model:
 Add model fields and messages for drag state.
 
 ### Task 2: Add Draggable Task Cards
-**Files:** `kanban_board.lustre`, `app.gleam`
+**Files:** `kanban_board.ghtml`, `app.gleam`
 
 Make task cards draggable with `dragstart` and `dragend` handlers.
 
 ### Task 3: Add Drop Zones to Columns
-**Files:** `kanban_board.lustre`, `app.gleam`
+**Files:** `kanban_board.ghtml`, `app.gleam`
 
 Add `dragover`, `dragleave`, and `drop` handlers to columns.
 
@@ -79,7 +79,7 @@ Add `dragover`, `dragleave`, and `drop` handlers to columns.
 Implement the update logic and event decoders.
 
 ### Task 5: Add Visual Drop Zone Feedback
-**Files:** `kanban_board.lustre`
+**Files:** `kanban_board.ghtml`
 
 Highlight columns when dragging over them.
 
@@ -90,7 +90,7 @@ Highlight columns when dragging over them.
 | `model.gleam` | Add `dragging_task_id`, `drop_target_column` fields |
 | `msg.gleam` | Add `DragStart`, `DragEnd`, `DragOver`, `DragLeave`, `DropTask` messages |
 | `update.gleam` | Handle drag/drop messages |
-| `kanban_board.lustre` | Add draggable attrs, drag/drop event handlers, drop zone styling |
+| `kanban_board.ghtml` | Add draggable attrs, drag/drop event handlers, drop zone styling |
 | `app.gleam` | Add event decoders, pass handlers to kanban_board |
 
 ## Technical Notes

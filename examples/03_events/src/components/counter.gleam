@@ -1,4 +1,4 @@
-// @generated from counter.lustre
+// @generated from counter.ghtml
 // @hash 9884f45a2438d895ae5b962a78117bc425b9100bdbb5c968b3811fe314bcb2ae
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

@@ -8,7 +8,7 @@ Add `draggable="true"` attribute and drag event handlers to task cards in the ka
 
 ## Files to Modify
 
-### 1. `examples/09_drag_drop/src/components/tasks/kanban_board.lustre`
+### 1. `examples/09_drag_drop/src/components/tasks/kanban_board.ghtml`
 
 **Update params** to accept drag handlers:
 

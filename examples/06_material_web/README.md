@@ -36,7 +36,7 @@ Material Web's use of standard DOM events means simpler handler types - you use 
 Material Web components are loaded via ES modules from a CDN:
 
 ```toml
-[tools.lustre.html]
+[tools.ghtml.html]
 scripts = [
   { type = "module", src = "https://esm.run/@material/web/all.js" }
 ]
@@ -124,7 +124,7 @@ Material Design 3 provides an extensive token system. See the [Material Design 3
 
 ## Components in This Example
 
-### md_button.lustre
+### md_button.ghtml
 Filled button variant with click handler:
 ```html
 @params(
@@ -137,7 +137,7 @@ Filled button variant with click handler:
 </md-filled-button>
 ```
 
-### md_textfield.lustre
+### md_textfield.ghtml
 Outlined text field with standard @input event:
 ```html
 @params(
@@ -153,7 +153,7 @@ Outlined text field with standard @input event:
 />
 ```
 
-### md_checkbox.lustre
+### md_checkbox.ghtml
 Checkbox with conditional `checked` attribute and click handler:
 ```html
 @params(
@@ -168,7 +168,7 @@ Checkbox with conditional `checked` attribute and click handler:
 {/if}
 ```
 
-### md_switch.lustre
+### md_switch.ghtml
 Switch with conditional `selected` attribute:
 ```html
 @params(
@@ -183,7 +183,7 @@ Switch with conditional `selected` attribute:
 {/if}
 ```
 
-### md_fab.lustre
+### md_fab.ghtml
 Floating action button with icon slot:
 ```html
 @params(
@@ -196,7 +196,7 @@ Floating action button with icon slot:
 </md-fab>
 ```
 
-### md_list.lustre
+### md_list.ghtml
 List with `{#each}` for dynamic items:
 ```html
 @import(types.{type ListItem})
@@ -232,14 +232,14 @@ List with `{#each}` for dynamic items:
 ## Key Files
 
 - `src/types.gleam` - Custom types used by components
-- `src/components/md_button.lustre` - Filled button
-- `src/components/md_outlined_button.lustre` - Outlined button
-- `src/components/md_text_button.lustre` - Text button
-- `src/components/md_textfield.lustre` - Text field with @input
-- `src/components/md_checkbox.lustre` - Checkbox with boolean attr
-- `src/components/md_switch.lustre` - Switch with boolean attr
-- `src/components/md_fab.lustre` - FAB with icon slot
-- `src/components/md_list.lustre` - List with {#each}
+- `src/components/md_button.ghtml` - Filled button
+- `src/components/md_outlined_button.ghtml` - Outlined button
+- `src/components/md_text_button.ghtml` - Text button
+- `src/components/md_textfield.ghtml` - Text field with @input
+- `src/components/md_checkbox.ghtml` - Checkbox with boolean attr
+- `src/components/md_switch.ghtml` - Switch with boolean attr
+- `src/components/md_fab.ghtml` - FAB with icon slot
+- `src/components/md_list.ghtml` - List with {#each}
 - `src/app.gleam` - Main app demonstrating all components
 
 ## Exercises

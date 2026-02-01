@@ -63,7 +63,7 @@ html.button([event.on_click(on_click())], [html.text("Click me")])
 
 ## Components in This Example
 
-### counter.lustre - Function Call Pattern
+### counter.ghtml - Function Call Pattern
 
 Demonstrates click events that don't need event data:
 
@@ -74,7 +74,7 @@ Demonstrates click events that don't need event data:
 
 The handler functions return messages directly: `fn() -> msg`
 
-### search_input.lustre - Function Reference Pattern
+### search_input.ghtml - Function Reference Pattern
 
 Demonstrates input events that need the input value:
 
@@ -84,7 +84,7 @@ Demonstrates input events that need the input value:
 
 The handler receives the input value: `fn(String) -> msg`
 
-### form.lustre - Multiple Event Types
+### form.ghtml - Multiple Event Types
 
 Combines both patterns in a single component:
 - `@input={on_input}` - Function reference for input value
@@ -111,9 +111,9 @@ Combines both patterns in a single component:
 
 ## Key Files
 
-- `src/components/counter.lustre` - Function call pattern with @click
-- `src/components/search_input.lustre` - Function reference pattern with @input
-- `src/components/form.lustre` - Multiple events combining both patterns
+- `src/components/counter.ghtml` - Function call pattern with @click
+- `src/components/search_input.ghtml` - Function reference pattern with @input
+- `src/components/form.ghtml` - Multiple events combining both patterns
 - `src/app.gleam` - Main app demonstrating all components
 
 ## Exercises

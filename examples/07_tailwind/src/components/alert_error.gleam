@@ -1,4 +1,4 @@
-// @generated from alert_error.lustre
+// @generated from alert_error.ghtml
 // @hash baadaffd75fd56554e44d6f72c9a472546a5d770a2eeef14bd1dd231228932ac
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

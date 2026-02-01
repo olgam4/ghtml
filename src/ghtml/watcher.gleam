@@ -57,7 +57,7 @@ pub fn get_mtime(path: String) -> Result(Int, Nil) {
   }
 }
 
-/// Get modification times for all .lustre files in a directory tree.
+/// Get modification times for all .ghtml files in a directory tree.
 pub fn get_all_mtimes(root: String) -> Dict(String, Int) {
   scanner.find_ghtml_files(root)
   |> list.filter_map(fn(path) {

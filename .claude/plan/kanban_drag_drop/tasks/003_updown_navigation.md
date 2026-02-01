@@ -12,7 +12,7 @@ Make the three kanban columns accept dropped tasks by handling `dragover`, `drag
 
 ## Files to Modify
 
-### 1. `examples/09_drag_drop/src/components/tasks/kanban_board.lustre`
+### 1. `examples/09_drag_drop/src/components/tasks/kanban_board.ghtml`
 
 **Update params** to accept drop zone handlers:
 

@@ -98,9 +98,9 @@ Generates: `attribute.attribute("data-custom", "value")`
 
 ## Key Files
 
-- `src/components/form_field.lustre` - Static + dynamic attributes
-- `src/components/checkbox_field.lustre` - Boolean attributes
-- `src/components/link_button.lustre` - Conditional attributes
+- `src/components/form_field.ghtml` - Static + dynamic attributes
+- `src/components/checkbox_field.ghtml` - Boolean attributes
+- `src/components/link_button.ghtml` - Conditional attributes
 - `src/app.gleam` - Main app using all components
 
 ## Exercises

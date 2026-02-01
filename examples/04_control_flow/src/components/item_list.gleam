@@ -1,4 +1,4 @@
-// @generated from item_list.lustre
+// @generated from item_list.ghtml
 // @hash c26869765c2c23f7c2503de1439076dd3ff135ff62ffa7179b740b2ca223c612
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

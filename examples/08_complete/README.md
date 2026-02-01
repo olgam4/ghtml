@@ -116,22 +116,22 @@ This example showcases all Lustre template features:
 ## Component Breakdown
 
 ### Layout Components
-- `sidebar.lustre` - Navigation sidebar with projects
-- `header.lustre` - Top header with search and controls
-- `mobile_nav.lustre` - Bottom navigation for mobile
+- `sidebar.ghtml` - Navigation sidebar with projects
+- `header.ghtml` - Top header with search and controls
+- `mobile_nav.ghtml` - Bottom navigation for mobile
 
 ### Task Components
-- `task_list.lustre` - List of tasks with inline card rendering
-- `task_detail.lustre` - Full task view with subtask management
-- `kanban_board.lustre` - Kanban board view
+- `task_list.ghtml` - List of tasks with inline card rendering
+- `task_detail.ghtml` - Full task view with subtask management
+- `kanban_board.ghtml` - Kanban board view
 
 ### Filter Components
-- `filter_bar.lustre` - Filter and sort controls
+- `filter_bar.ghtml` - Filter and sort controls
 
 ### Dialog Components
-- `confirm_dialog.lustre` - Confirmation modal
-- `export_dialog.lustre` - Export/import options
+- `confirm_dialog.ghtml` - Confirmation modal
+- `export_dialog.ghtml` - Export/import options
 
 ### Common Components
-- `empty_state.lustre` - Empty content placeholder
-- `toast.lustre` - Notification toast
+- `empty_state.ghtml` - Empty content placeholder
+- `toast.ghtml` - Notification toast

@@ -1,4 +1,4 @@
-// @generated from md_checkbox.lustre
+// @generated from md_checkbox.ghtml
 // @hash 1b69b58744855c81198d4e10be6b68d51eec2d68e0b258f58f24742630f5a6fa
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

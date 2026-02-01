@@ -1,4 +1,4 @@
-// @generated from todo_item.lustre
+// @generated from todo_item.ghtml
 // @hash dbef3cd10667b9f5c4007daa8fa5858ad16868dfa40415c4d01245fb6e41281c
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

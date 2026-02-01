@@ -1,4 +1,4 @@
-// @generated from md_fab.lustre
+// @generated from md_fab.ghtml
 // @hash 3812fe086ebfd76ce4753daee19cc0689da78faadf5bcd4828228eebec57683d
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

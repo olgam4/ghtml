@@ -56,7 +56,7 @@ Expressions in curly braces are interpolated. The expression must evaluate to `S
 
 ## Key Files
 
-- `src/components/greeting.lustre` - The template file
+- `src/components/greeting.ghtml` - The template file
 - `src/components/greeting.gleam` - Generated Gleam code (after running `just run`)
 - `src/simple_example.gleam` - Main app that uses the component
 

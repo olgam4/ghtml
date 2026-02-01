@@ -1,4 +1,4 @@
-// @generated from sl_button.lustre
+// @generated from sl_button.ghtml
 // @hash 6a14699afce8c90438d2aa016b57f2d1040bb59228fb6bced67083681dcf5e00
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

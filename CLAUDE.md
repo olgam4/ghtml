@@ -32,22 +32,51 @@ The `.claude/plan/` directory contains detailed specifications for multi-session
 .claude/plan/
 ├── _template/                    # Templates for creating new epics
 │   ├── PLAN.md                   # Epic plan template
+│   ├── research/                 # Research documentation template
+│   │   └── README.md
 │   └── tasks/
 │       ├── README.md             # Tasks overview template
 │       └── 000_template_task.md  # Individual task template
+├── _complete/                    # Archive of completed epics
+│   └── <epic_name>/              # Moved here when all tasks done
 ├── <epic_name>/                  # Each epic has its own folder
 │   ├── PLAN.md                   # High-level epic plan
+│   ├── research/                 # Research docs (optional)
+│   │   └── *.md                  # Investigation findings
 │   └── tasks/
 │       ├── README.md             # Task overview and status
 │       └── NNN_task_name.md      # Individual task specs
 ```
 
+## Researching Before Planning
+
+For complex epics, research first and document findings:
+
+1. Create the epic folder: `just epic your_epic_name`
+2. Create `research/` folder within the epic
+3. Write research documents exploring tools, approaches, or alternatives
+4. Use findings to inform `PLAN.md` design decisions
+5. Link research docs from PLAN.md's Research section
+
+Research documents capture investigation that would otherwise be lost between sessions.
+
 ## Creating a New Epic
 
 1. Run: `just epic your_epic_name`
-2. Edit `.claude/plan/your_epic_name/PLAN.md` with your epic's details
-3. Create task files from `tasks/000_template_task.md`
-4. Update `tasks/README.md` with task status tracking
+2. (Optional) Research and document in `research/` folder
+3. Edit `.claude/plan/your_epic_name/PLAN.md` with your epic's details
+4. Create task files from `tasks/000_template_task.md`
+5. Update `tasks/README.md` with task status tracking
+
+## Completing an Epic
+
+When all tasks in an epic are marked complete (`[x]`), archive the epic:
+
+```bash
+mv .claude/plan/<epic_name> .claude/plan/_complete/
+```
+
+Update `.claude/plan/_complete/README.md` to add the epic to the archived list.
 
 # Execution Modes
 

@@ -1,4 +1,4 @@
-// @generated from filter_bar.lustre
+// @generated from filter_bar.ghtml
 // @hash 94567e05ddf0d18bc4ecfa96f0e80354adc9176d18fb62b54153e15970720970
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

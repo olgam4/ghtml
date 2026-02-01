@@ -1,4 +1,4 @@
-// @generated from mobile_nav.lustre
+// @generated from mobile_nav.ghtml
 // @hash 8201ee9b47668e50772f79972a20c4b086ae5bd9fbc814f3b7674faf71943209
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

@@ -1,4 +1,4 @@
-// @generated from export_dialog.lustre
+// @generated from export_dialog.ghtml
 // @hash 27410fc7416c23f7ac1c28081d67b36afe2df39bccbc9f32b0b100953daac89f
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

@@ -1,4 +1,4 @@
-// @generated from md_switch.lustre
+// @generated from md_switch.ghtml
 // @hash 3906f35c09861cc84132428eccc3d8a63b2f241588472ed3a938acd3776578af
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

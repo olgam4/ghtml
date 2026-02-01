@@ -103,7 +103,7 @@ When displaying static content (like syntax examples), run the display commands 
 
 ```bash
 # Display content first
-tmux send-keys -t $SESSION:0.0 "bat -pp -l html file.lustre" Enter
+tmux send-keys -t $SESSION:0.0 "bat -pp -l html file.ghtml" Enter
 sleep 1
 tmux send-keys -t $SESSION:0.1 "bat -pp -l rust file.gleam" Enter
 sleep 1
@@ -115,7 +115,7 @@ script -q /dev/null bash -c "..." &
 ### 5. Syntax highlighting
 
 Use `bat` with appropriate language flags:
-- `.lustre` files: `-l html` (close enough)
+- `.ghtml` files: `-l html` (close enough)
 - `.gleam` files: `-l rust` (similar syntax highlighting)
 - Use `-pp` for plain output (no line numbers, no paging)
 
@@ -213,4 +213,4 @@ echo "Done! Created assets/gifs/myrecording.gif"
 | record-features.sh | features.gif | Hash-based caching: run twice, second is instant |
 | record-syntax.sh | syntax.gif | All control flow patterns ({#if}, {#each}, {#case}) |
 | record-watch.sh | watch.gif | Watch mode with live file editing |
-| record-cleanup.sh | cleanup.gif | Auto cleanup: delete .lustre, .gleam auto-removed |
+| record-cleanup.sh | cleanup.gif | Auto cleanup: delete .ghtml, .gleam auto-removed |

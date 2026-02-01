@@ -22,7 +22,7 @@ Set up the `editors/` directory with the scaffolding for all editor packages. Th
 ```
 editors/
 ├── README.md                     # Overview of editor support
-├── tree-sitter-lustre/
+├── tree-sitter-ghtml/
 │   ├── package.json
 │   ├── grammar.js                # Placeholder
 │   ├── queries/
@@ -32,7 +32,7 @@ editors/
 │   │       └── index.js          # Node bindings
 │   └── .gitignore
 │
-├── zed-lustre/
+├── zed-ghtml/
 │   ├── extension.toml
 │   ├── README.md
 │   ├── languages/
@@ -41,7 +41,7 @@ editors/
 │   └── grammars/
 │       └── .gitkeep
 │
-├── vscode-lustre/
+├── vscode-ghtml/
 │   ├── package.json
 │   ├── README.md
 │   ├── syntaxes/
@@ -51,11 +51,11 @@ editors/
 └── .gitignore                    # Shared ignores
 ```
 
-### 2. Create tree-sitter-lustre package.json
+### 2. Create tree-sitter-ghtml package.json
 
 ```json
 {
-  "name": "tree-sitter-lustre",
+  "name": "tree-sitter-ghtml",
   "version": "0.1.0",
   "description": "Tree-sitter grammar for Lustre template files",
   "main": "bindings/node",
@@ -64,7 +64,7 @@ editors/
   "repository": {
     "type": "git",
     "url": "https://github.com/user/lustre_template_gen",
-    "directory": "editors/tree-sitter-lustre"
+    "directory": "editors/tree-sitter-ghtml"
   },
   "license": "MIT",
   "devDependencies": {
@@ -77,7 +77,7 @@ editors/
   },
   "tree-sitter": [
     {
-      "scope": "source.lustre",
+      "scope": "source.ghtml",
       "injection-regex": "^lustre$",
       "file-types": ["lustre"],
       "highlights": "queries/highlights.scm"
@@ -97,16 +97,16 @@ schema_version = 1
 authors = ["Your Name <email@example.com>"]
 repository = "https://github.com/user/lustre_template_gen"
 
-[grammars.lustre]
+[grammars.ghtml]
 repository = "https://github.com/user/lustre_template_gen"
-path = "editors/tree-sitter-lustre"
+path = "editors/tree-sitter-ghtml"
 ```
 
 ### 4. Create VS Code package.json
 
 ```json
 {
-  "name": "vscode-lustre",
+  "name": "vscode-ghtml",
   "displayName": "Lustre Templates",
   "description": "Syntax highlighting for Lustre template files",
   "version": "0.1.0",
@@ -119,13 +119,13 @@ path = "editors/tree-sitter-lustre"
     "languages": [{
       "id": "lustre",
       "aliases": ["Lustre", "lustre"],
-      "extensions": [".lustre"],
+      "extensions": [".ghtml"],
       "configuration": "./language-configuration.json"
     }],
     "grammars": [{
       "language": "lustre",
-      "scopeName": "source.lustre",
-      "path": "./syntaxes/lustre.tmLanguage.json"
+      "scopeName": "source.ghtml",
+      "path": "./syntaxes/ghtml.tmLanguage.json"
     }]
   }
 }
@@ -138,13 +138,13 @@ path = "editors/tree-sitter-lustre"
 node_modules/
 
 # Build artifacts
-tree-sitter-lustre/src/
-tree-sitter-lustre/build/
+tree-sitter-ghtml/src/
+tree-sitter-ghtml/build/
 *.wasm
 
 # VS Code
-vscode-lustre/*.vsix
-vscode-lustre/out/
+vscode-ghtml/*.vsix
+vscode-ghtml/out/
 
 # Editor-specific
 .vscode-test/
@@ -155,15 +155,15 @@ vscode-lustre/out/
 This task is infrastructure setup - testing is manual verification:
 
 1. Verify directory structure matches specification
-2. Verify `npm install` works in tree-sitter-lustre (should install tree-sitter-cli)
+2. Verify `npm install` works in tree-sitter-ghtml (should install tree-sitter-cli)
 3. Verify JSON files are valid
 
 ## Verification Checklist
 
 - [ ] All directories created as specified
-- [ ] `tree-sitter-lustre/package.json` is valid JSON
-- [ ] `vscode-lustre/package.json` is valid JSON
-- [ ] `zed-lustre/extension.toml` is valid TOML
+- [ ] `tree-sitter-ghtml/package.json` is valid JSON
+- [ ] `vscode-ghtml/package.json` is valid JSON
+- [ ] `zed-ghtml/extension.toml` is valid TOML
 - [ ] `.gitignore` files exclude appropriate patterns
 - [ ] README.md files provide clear documentation
 
@@ -177,15 +177,15 @@ This task is infrastructure setup - testing is manual verification:
 
 - `editors/README.md`
 - `editors/.gitignore`
-- `editors/tree-sitter-lustre/package.json`
-- `editors/tree-sitter-lustre/grammar.js` (placeholder)
-- `editors/tree-sitter-lustre/queries/highlights.scm` (placeholder)
-- `editors/tree-sitter-lustre/bindings/node/index.js`
-- `editors/tree-sitter-lustre/.gitignore`
-- `editors/zed-lustre/extension.toml`
-- `editors/zed-lustre/README.md`
-- `editors/zed-lustre/languages/lustre/config.toml`
-- `editors/vscode-lustre/package.json`
-- `editors/vscode-lustre/README.md`
-- `editors/vscode-lustre/language-configuration.json`
-- `editors/vscode-lustre/syntaxes/.gitkeep`
+- `editors/tree-sitter-ghtml/package.json`
+- `editors/tree-sitter-ghtml/grammar.js` (placeholder)
+- `editors/tree-sitter-ghtml/queries/highlights.scm` (placeholder)
+- `editors/tree-sitter-ghtml/bindings/node/index.js`
+- `editors/tree-sitter-ghtml/.gitignore`
+- `editors/zed-ghtml/extension.toml`
+- `editors/zed-ghtml/README.md`
+- `editors/zed-ghtml/languages/lustre/config.toml`
+- `editors/vscode-ghtml/package.json`
+- `editors/vscode-ghtml/README.md`
+- `editors/vscode-ghtml/language-configuration.json`
+- `editors/vscode-ghtml/syntaxes/.gitkeep`

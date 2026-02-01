@@ -1,4 +1,4 @@
-// @generated from sidebar.lustre
+// @generated from sidebar.ghtml
 // @hash 4e67b028be3523ccf80b5768d8593405283c09015fde6be1bea67cdb3a2e6413
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

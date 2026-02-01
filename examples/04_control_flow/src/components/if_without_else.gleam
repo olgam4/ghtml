@@ -1,4 +1,4 @@
-// @generated from if_without_else.lustre
+// @generated from if_without_else.ghtml
 // @hash d448d362a24f775a44cb5e9effe5cfc5e1123d739430c3b2e3ab777a991a91a3
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

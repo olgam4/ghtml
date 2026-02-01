@@ -2,7 +2,7 @@
 
 ## Description
 
-Implement a complete tree-sitter grammar for `.lustre` template files. This grammar will be the foundation for syntax highlighting in Zed, Neovim, Helix, and other modern editors that support tree-sitter.
+Implement a complete tree-sitter grammar for `.ghtml` template files. This grammar will be the foundation for syntax highlighting in Zed, Neovim, Helix, and other modern editors that support tree-sitter.
 
 ## Dependencies
 
@@ -10,7 +10,7 @@ Implement a complete tree-sitter grammar for `.lustre` template files. This gram
 
 ## Success Criteria
 
-1. Grammar parses all `.lustre` files in `test/fixtures/` without errors
+1. Grammar parses all `.ghtml` files in `test/fixtures/` without errors
 2. All syntax elements are correctly identified (directives, tags, expressions, control flow)
 3. `tree-sitter test` passes with comprehensive test cases
 4. Highlighting queries produce appropriate syntax highlighting
@@ -182,11 +182,11 @@ Expression interpolation
 ### 5. Generate and Test
 
 ```bash
-cd editors/tree-sitter-lustre
+cd editors/tree-sitter-ghtml
 npm install
 npm run build      # tree-sitter generate
 npm run test       # tree-sitter test
-npm run parse -- ../../test/fixtures/simple/basic.lustre
+npm run parse -- ../../test/fixtures/simple/basic.ghtml
 ```
 
 ## Test Cases
@@ -208,9 +208,9 @@ Create test corpus files for:
 
 - [ ] `tree-sitter generate` succeeds
 - [ ] `tree-sitter test` passes all test cases
-- [ ] Parses `test/fixtures/simple/basic.lustre` correctly
-- [ ] Parses `test/fixtures/attributes/all_attrs.lustre` correctly
-- [ ] Parses `test/fixtures/control_flow/full.lustre` correctly
+- [ ] Parses `test/fixtures/simple/basic.ghtml` correctly
+- [ ] Parses `test/fixtures/attributes/all_attrs.ghtml` correctly
+- [ ] Parses `test/fixtures/control_flow/full.ghtml` correctly
 - [ ] Highlight queries cover all syntax elements
 - [ ] No ambiguity warnings from tree-sitter
 
@@ -224,9 +224,9 @@ Create test corpus files for:
 
 ## Files to Modify
 
-- `editors/tree-sitter-lustre/grammar.js` - Complete grammar implementation
-- `editors/tree-sitter-lustre/queries/highlights.scm` - Syntax highlighting queries
-- `editors/tree-sitter-lustre/test/corpus/*.txt` - Test cases (new directory)
+- `editors/tree-sitter-ghtml/grammar.js` - Complete grammar implementation
+- `editors/tree-sitter-ghtml/queries/highlights.scm` - Syntax highlighting queries
+- `editors/tree-sitter-ghtml/test/corpus/*.txt` - Test cases (new directory)
 
 ## References
 

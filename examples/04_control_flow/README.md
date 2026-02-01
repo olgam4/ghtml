@@ -106,23 +106,23 @@ case status {
 
 ## Components in This Example
 
-### user_badge.lustre - If/Else
+### user_badge.ghtml - If/Else
 
 Simple conditional rendering based on admin status.
 
-### if_without_else.lustre - If Without Else
+### if_without_else.ghtml - If Without Else
 
 Shows how omitting the else branch renders nothing when false.
 
-### item_list.lustre - Each with Index
+### item_list.ghtml - Each with Index
 
 Iterates over a list of items, displaying each with its index.
 
-### status_display.lustre - Case Pattern Matching
+### status_display.ghtml - Case Pattern Matching
 
 Matches on a Status type with three variants, including one with a binding.
 
-### todo_item.lustre - Combined Example
+### todo_item.ghtml - Combined Example
 
 A todo item component that uses:
 - `{#if}` to show strikethrough for completed items
@@ -149,11 +149,11 @@ A todo item component that uses:
 ## Key Files
 
 - `src/types.gleam` - Custom types used in the example
-- `src/components/user_badge.lustre` - If/else example
-- `src/components/if_without_else.lustre` - If without else
-- `src/components/item_list.lustre` - Each with index
-- `src/components/status_display.lustre` - Case pattern matching
-- `src/components/todo_item.lustre` - Combined control flow
+- `src/components/user_badge.ghtml` - If/else example
+- `src/components/if_without_else.ghtml` - If without else
+- `src/components/item_list.ghtml` - Each with index
+- `src/components/status_display.ghtml` - Case pattern matching
+- `src/components/todo_item.ghtml` - Combined control flow
 - `src/app.gleam` - Main app demonstrating all components
 
 ## Exercises

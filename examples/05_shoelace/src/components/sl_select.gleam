@@ -1,4 +1,4 @@
-// @generated from sl_select.lustre
+// @generated from sl_select.ghtml
 // @hash ad87be08572d6a008643339b5b729a0df06c7e8c819ffc753c97cd960e8dac65
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

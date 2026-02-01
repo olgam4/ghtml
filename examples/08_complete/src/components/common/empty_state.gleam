@@ -1,4 +1,4 @@
-// @generated from empty_state.lustre
+// @generated from empty_state.ghtml
 // @hash 3f460030b20cd1397ba99d9fcf9df47ac515b2a9880f4f021b6143c7fad0ad2e
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

@@ -1,4 +1,4 @@
-// @generated from task_list.lustre
+// @generated from task_list.ghtml
 // @hash ab81b996046fc8f85342091215f7e1b3df721c487ffb854220e7629adcb02a43
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

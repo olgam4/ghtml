@@ -2,7 +2,7 @@
 
 ## Description
 
-Package the TextMate grammar into a complete VS Code extension that can be installed locally or published to the VS Code Marketplace. This provides syntax highlighting for `.lustre` files in VS Code.
+Package the TextMate grammar into a complete VS Code extension that can be installed locally or published to the VS Code Marketplace. This provides syntax highlighting for `.ghtml` files in VS Code.
 
 ## Dependencies
 
@@ -11,7 +11,7 @@ Package the TextMate grammar into a complete VS Code extension that can be insta
 ## Success Criteria
 
 1. Extension installs successfully in VS Code
-2. `.lustre` files are recognized and highlighted
+2. `.ghtml` files are recognized and highlighted
 3. Language configuration provides good editing experience (brackets, comments)
 4. Extension can be packaged as `.vsix` for distribution
 5. Extension is ready for VS Code Marketplace publishing
@@ -30,7 +30,7 @@ Package the TextMate grammar into a complete VS Code extension that can be insta
   "repository": {
     "type": "git",
     "url": "https://github.com/user/lustre_template_gen",
-    "directory": "editors/vscode-lustre"
+    "directory": "editors/vscode-ghtml"
   },
   "engines": {
     "vscode": "^1.80.0"
@@ -51,7 +51,7 @@ Package the TextMate grammar into a complete VS Code extension that can be insta
       {
         "id": "lustre",
         "aliases": ["Lustre", "lustre"],
-        "extensions": [".lustre"],
+        "extensions": [".ghtml"],
         "configuration": "./language-configuration.json",
         "icon": {
           "light": "./icons/lustre-light.svg",
@@ -62,8 +62,8 @@ Package the TextMate grammar into a complete VS Code extension that can be insta
     "grammars": [
       {
         "language": "lustre",
-        "scopeName": "source.lustre",
-        "path": "./syntaxes/lustre.tmLanguage.json"
+        "scopeName": "source.ghtml",
+        "path": "./syntaxes/ghtml.tmLanguage.json"
       }
     ]
   },
@@ -143,7 +143,7 @@ Syntax highlighting for [Lustre](https://lustre.build/) template files.
 
 ## Features
 
-- Full syntax highlighting for `.lustre` template files
+- Full syntax highlighting for `.ghtml` template files
 - Support for:
   - Directives (`@import`, `@params`)
   - HTML-like elements and attributes
@@ -171,9 +171,9 @@ Syntax highlighting for [Lustre](https://lustre.build/) template files.
 ### Development Installation
 
 1. Clone the repository
-2. Run `npm install` in `editors/vscode-lustre`
+2. Run `npm install` in `editors/vscode-ghtml`
 3. Press F5 to launch Extension Development Host
-4. Open a `.lustre` file to test
+4. Open a `.ghtml` file to test
 
 ## Syntax Examples
 
@@ -227,7 +227,7 @@ Create simple icons for the extension:
 ### 6. Package and Test
 
 ```bash
-cd editors/vscode-lustre
+cd editors/vscode-ghtml
 npm install
 
 # Test locally
@@ -244,7 +244,7 @@ code --install-extension lustre-0.1.0.vsix
 ## Directory Structure
 
 ```
-vscode-lustre/
+vscode-ghtml/
 ├── package.json
 ├── README.md
 ├── CHANGELOG.md
@@ -252,7 +252,7 @@ vscode-lustre/
 ├── .vscodeignore
 ├── language-configuration.json
 ├── syntaxes/
-│   └── lustre.tmLanguage.json
+│   └── ghtml.tmLanguage.json
 ├── icons/                        # Optional
 │   ├── lustre-light.svg
 │   └── lustre-dark.svg
@@ -265,19 +265,19 @@ vscode-lustre/
 
 Manual testing in VS Code:
 
-1. Open `test/fixtures/simple/basic.lustre`
+1. Open `test/fixtures/simple/basic.ghtml`
 2. Verify syntax highlighting is applied
 3. Test bracket matching: place cursor on `{`, verify matching `}` highlighted
 4. Test auto-close: type `{`, verify `}` is auto-inserted
 5. Test folding: click fold icon next to `{#if}` block
 6. Open Command Palette, type "Change Language Mode" - verify "Lustre" appears
-7. Create new file, save as `.lustre` - verify highlighting applies
+7. Create new file, save as `.ghtml` - verify highlighting applies
 
 ## Verification Checklist
 
 - [ ] `npm install` succeeds
 - [ ] Extension loads without errors in Extension Development Host
-- [ ] `.lustre` files are associated with Lustre language
+- [ ] `.ghtml` files are associated with Lustre language
 - [ ] Syntax highlighting matches expectations
 - [ ] Bracket matching works
 - [ ] Auto-closing pairs work
@@ -295,15 +295,15 @@ Manual testing in VS Code:
 
 ## Files to Modify
 
-- `editors/vscode-lustre/package.json` - Extension manifest
-- `editors/vscode-lustre/README.md` - User documentation
-- `editors/vscode-lustre/language-configuration.json` - Language settings
-- `editors/vscode-lustre/.vscodeignore` - Package exclusions
+- `editors/vscode-ghtml/package.json` - Extension manifest
+- `editors/vscode-ghtml/README.md` - User documentation
+- `editors/vscode-ghtml/language-configuration.json` - Language settings
+- `editors/vscode-ghtml/.vscodeignore` - Package exclusions
 
 ## Files to Create
 
-- `editors/vscode-lustre/CHANGELOG.md` - Version history
-- `editors/vscode-lustre/icon.png` - Extension icon (optional)
+- `editors/vscode-ghtml/CHANGELOG.md` - Version history
+- `editors/vscode-ghtml/icon.png` - Extension icon (optional)
 
 ## References
 

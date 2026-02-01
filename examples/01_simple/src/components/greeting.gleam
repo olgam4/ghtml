@@ -1,4 +1,4 @@
-// @generated from greeting.lustre
+// @generated from greeting.ghtml
 // @hash a17d54407872a17835ac16ddc61c6e3a72b64aacb93a6a84560d0ebf8aa5e07c
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

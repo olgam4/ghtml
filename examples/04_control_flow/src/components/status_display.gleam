@@ -1,4 +1,4 @@
-// @generated from status_display.lustre
+// @generated from status_display.ghtml
 // @hash 36849ca7a0b7fd00fb3c06bd8d562554995e5d5a15e9b91e480bcc8aa1cae546
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

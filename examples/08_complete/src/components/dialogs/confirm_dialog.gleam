@@ -1,4 +1,4 @@
-// @generated from confirm_dialog.lustre
+// @generated from confirm_dialog.ghtml
 // @hash 98c5edae67cfc4071f8941f8305b2a921af5e3ac573f4ae10f79edb039c3c916
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

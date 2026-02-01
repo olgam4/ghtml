@@ -12,9 +12,9 @@ The current `.plan/` folder approach works well for sequential, human-orchestrat
 2. **Beads** - Excels at execution tracking but specs aren't easily discoverable
 3. **Hybrid approach** - `.specs/` for Grep/Glob discovery + Beads for orchestration
 
-See:
-- `.claude/research/task_management_alternatives.md`
-- `.claude/research/spec_driven_beads_integration.md`
+See research folder:
+- [research/task_management_alternatives.md](research/task_management_alternatives.md)
+- [research/spec_driven_beads_integration.md](research/spec_driven_beads_integration.md)
 
 ## Scope
 
@@ -206,10 +206,14 @@ status: open           status: in_progress              status: closed
 - [ ] Should merger agent run continuously or be triggered?
 - [ ] How to handle PRs with merge conflicts?
 
+## Research
+
+Research documents in [research/](research/) folder:
+- [task_management_alternatives.md](research/task_management_alternatives.md) - Comparison of task tracking approaches
+- [spec_driven_beads_integration.md](research/spec_driven_beads_integration.md) - Hybrid spec + Beads design
+
 ## References
 
-- Research: `.claude/research/task_management_alternatives.md`
-- Spec integration: `.claude/research/spec_driven_beads_integration.md`
 - Beads: https://github.com/steveyegge/beads
 - Git worktrees: https://git-scm.com/docs/git-worktree
 - Kiro: https://kiro.dev/docs/specs/

@@ -1,4 +1,4 @@
-// @generated from kanban_board.lustre
+// @generated from kanban_board.ghtml
 // @hash fd1673604725c2624d9396c3ce2c7d2985278e0dbeee3b54dfbc65859c68f71b
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

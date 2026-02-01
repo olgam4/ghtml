@@ -1,4 +1,4 @@
-// @generated from link_button.lustre
+// @generated from link_button.ghtml
 // @hash 831534114a4c7bd3e02e3516a514258bb05b85b7a7d599ce9e56e7f227649171
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

@@ -2,11 +2,11 @@
 
 ## Goal
 
-Provide syntax highlighting and editor integration for `.lustre` template files across major code editors, enabling a better developer experience when working with Lustre templates.
+Provide syntax highlighting and editor integration for `.ghtml` template files across major code editors, enabling a better developer experience when working with Lustre templates.
 
 ## Background
 
-The `.lustre` template format combines:
+The `.ghtml` template format combines:
 - Directives: `@import()`, `@params()`
 - HTML-like tags with attributes
 - Expression interpolation: `{expression}`
@@ -19,7 +19,7 @@ Without proper syntax highlighting, developers must work with plain text files, 
 ## Scope
 
 ### In Scope
-- Tree-sitter grammar for `.lustre` files (foundation for modern editors)
+- Tree-sitter grammar for `.ghtml` files (foundation for modern editors)
 - Zed extension using tree-sitter
 - TextMate grammar for broader editor compatibility
 - VS Code extension using TextMate grammar
@@ -38,20 +38,20 @@ Editor support lives in `editors/` directory with each package independently pub
 
 ```
 editors/
-├── tree-sitter-lustre/       # npm: tree-sitter-lustre
+├── tree-sitter-ghtml/       # npm: tree-sitter-ghtml
 │   ├── grammar.js            # Grammar definition
 │   ├── package.json
 │   ├── queries/
 │   │   └── highlights.scm    # Highlighting queries
 │   └── src/                   # Generated parser (gitignored)
 │
-├── vscode-lustre/            # VS Code Marketplace
+├── vscode-ghtml/            # VS Code Marketplace
 │   ├── package.json
 │   ├── syntaxes/
-│   │   └── lustre.tmLanguage.json
+│   │   └── ghtml.tmLanguage.json
 │   └── language-configuration.json
 │
-└── zed-lustre/               # Zed Extensions
+└── zed-ghtml/               # Zed Extensions
     ├── extension.toml
     ├── languages/
     │   └── lustre/
@@ -64,7 +64,7 @@ editors/
 | # | Task | Description | Dependencies |
 |---|------|-------------|--------------|
 | 001 | Directory Structure | Set up editors/ directory with package scaffolding | None |
-| 002 | Tree-sitter Grammar | Implement tree-sitter-lustre grammar | 001 |
+| 002 | Tree-sitter Grammar | Implement tree-sitter-ghtml grammar | 001 |
 | 003 | Zed Extension | Create Zed extension using tree-sitter | 002 |
 | 004 | TextMate Grammar | Create TextMate grammar for VS Code compatibility | 001 |
 | 005 | VS Code Extension | Package VS Code extension with TextMate grammar | 004 |
@@ -83,8 +83,8 @@ editors/
 
 ## Success Criteria
 
-1. `.lustre` files have syntax highlighting in Zed editor
-2. `.lustre` files have syntax highlighting in VS Code
+1. `.ghtml` files have syntax highlighting in Zed editor
+2. `.ghtml` files have syntax highlighting in VS Code
 3. Tree-sitter grammar correctly parses all test fixtures
 4. Each editor package can be independently published
 5. Syntax highlighting covers: directives, HTML tags, expressions, control flow, event handlers

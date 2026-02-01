@@ -2,7 +2,7 @@
 
 ## Description
 
-Create a Zed editor extension that provides syntax highlighting for `.lustre` files using the tree-sitter grammar. This allows Zed users to have proper language support when editing Lustre templates.
+Create a Zed editor extension that provides syntax highlighting for `.ghtml` files using the tree-sitter grammar. This allows Zed users to have proper language support when editing Lustre templates.
 
 ## Dependencies
 
@@ -10,7 +10,7 @@ Create a Zed editor extension that provides syntax highlighting for `.lustre` fi
 
 ## Success Criteria
 
-1. Zed recognizes `.lustre` files as Lustre language
+1. Zed recognizes `.ghtml` files as Lustre language
 2. Syntax highlighting works correctly in Zed
 3. Extension can be installed locally for testing
 4. Extension is structured for publishing to Zed Extensions registry
@@ -22,15 +22,15 @@ Create a Zed editor extension that provides syntax highlighting for `.lustre` fi
 ```toml
 id = "lustre"
 name = "Lustre Templates"
-description = "Syntax highlighting for Lustre template files (.lustre)"
+description = "Syntax highlighting for Lustre template files (.ghtml)"
 version = "0.1.0"
 schema_version = 1
 authors = ["Your Name <email@example.com>"]
 repository = "https://github.com/user/lustre_template_gen"
 
-[grammars.lustre]
+[grammars.ghtml]
 repository = "https://github.com/user/lustre_template_gen"
-path = "editors/tree-sitter-lustre"
+path = "editors/tree-sitter-ghtml"
 commit = ""  # Will be filled when publishing
 ```
 
@@ -55,11 +55,11 @@ autoclose_before = ";:.,=}])>\" \n\t"
 
 ### 3. Copy Highlight Queries
 
-Zed uses tree-sitter queries directly. Copy or symlink from tree-sitter-lustre:
+Zed uses tree-sitter queries directly. Copy or symlink from tree-sitter-ghtml:
 
 `languages/lustre/highlights.scm`:
 ```scheme
-; Copy content from editors/tree-sitter-lustre/queries/highlights.scm
+; Copy content from editors/tree-sitter-ghtml/queries/highlights.scm
 ```
 
 ### 4. Add Optional Queries
@@ -100,7 +100,7 @@ Zed uses tree-sitter queries directly. Copy or symlink from tree-sitter-lustre:
 ```markdown
 # Lustre Templates for Zed
 
-Syntax highlighting for [Lustre](https://lustre.build/) template files (`.lustre`).
+Syntax highlighting for [Lustre](https://lustre.build/) template files (`.ghtml`).
 
 ## Features
 
@@ -125,7 +125,7 @@ Syntax highlighting for [Lustre](https://lustre.build/) template files (`.lustre
 
 1. Clone the repository
 2. In Zed, use `zed: Install Dev Extension`
-3. Select the `editors/zed-lustre` directory
+3. Select the `editors/zed-ghtml` directory
 ```
 
 ### 6. Test Locally
@@ -133,15 +133,15 @@ Syntax highlighting for [Lustre](https://lustre.build/) template files (`.lustre
 ```bash
 # In Zed, open command palette and run:
 # "zed: Install Dev Extension"
-# Select: editors/zed-lustre
+# Select: editors/zed-ghtml
 
-# Open a .lustre file and verify highlighting
+# Open a .ghtml file and verify highlighting
 ```
 
 ## Directory Structure
 
 ```
-zed-lustre/
+zed-ghtml/
 ├── extension.toml
 ├── README.md
 ├── languages/
@@ -159,16 +159,16 @@ zed-lustre/
 
 Manual testing in Zed:
 
-1. Open `test/fixtures/simple/basic.lustre` - verify basic highlighting
-2. Open `test/fixtures/control_flow/full.lustre` - verify control flow keywords
-3. Open `test/fixtures/attributes/all_attrs.lustre` - verify attribute highlighting
-4. Create new `.lustre` file - verify file type detection
+1. Open `test/fixtures/simple/basic.ghtml` - verify basic highlighting
+2. Open `test/fixtures/control_flow/full.ghtml` - verify control flow keywords
+3. Open `test/fixtures/attributes/all_attrs.ghtml` - verify attribute highlighting
+4. Create new `.ghtml` file - verify file type detection
 5. Test bracket matching with `{`, `(`, `<`
 
 ## Verification Checklist
 
 - [ ] Extension installs without errors in Zed
-- [ ] `.lustre` files are recognized as Lustre language
+- [ ] `.ghtml` files are recognized as Lustre language
 - [ ] Directives (`@import`, `@params`) are highlighted
 - [ ] HTML tags and attributes are highlighted
 - [ ] Expressions `{...}` are highlighted
@@ -186,12 +186,12 @@ Manual testing in Zed:
 
 ## Files to Modify
 
-- `editors/zed-lustre/extension.toml` - Update with correct metadata
-- `editors/zed-lustre/README.md` - Complete documentation
-- `editors/zed-lustre/languages/lustre/config.toml` - Language configuration
-- `editors/zed-lustre/languages/lustre/highlights.scm` - Copy from tree-sitter
-- `editors/zed-lustre/languages/lustre/brackets.scm` - Bracket definitions
-- `editors/zed-lustre/languages/lustre/indents.scm` - Indentation rules
+- `editors/zed-ghtml/extension.toml` - Update with correct metadata
+- `editors/zed-ghtml/README.md` - Complete documentation
+- `editors/zed-ghtml/languages/lustre/config.toml` - Language configuration
+- `editors/zed-ghtml/languages/lustre/highlights.scm` - Copy from tree-sitter
+- `editors/zed-ghtml/languages/lustre/brackets.scm` - Bracket definitions
+- `editors/zed-ghtml/languages/lustre/indents.scm` - Indentation rules
 
 ## References
 

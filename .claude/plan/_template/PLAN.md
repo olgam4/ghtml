@@ -65,6 +65,11 @@
 - [ ] [Question that needs answering before or during implementation]
 - [ ] [Another question]
 
+## Research
+
+Research documents in `research/` folder (delete section if no research):
+- [research/topic_name.md](research/topic_name.md) - Brief description of findings
+
 ## References
 
 - [Link or reference to related documentation]

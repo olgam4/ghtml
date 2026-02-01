@@ -1,4 +1,4 @@
-// @generated from form.lustre
+// @generated from form.ghtml
 // @hash f48d1d710b41aaa86f43b5d85995f5ad9656293dfd2cb9b044b9bd31dd481fca
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

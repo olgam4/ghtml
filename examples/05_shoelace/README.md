@@ -105,7 +105,7 @@ The `slot` attribute is passed through as a regular attribute.
 
 ## Components in This Example
 
-### sl_button.lustre
+### sl_button.ghtml
 Basic button with variant support. Uses standard `@click` event:
 ```html
 <sl-button variant={variant} @click={on_click()}>
@@ -113,7 +113,7 @@ Basic button with variant support. Uses standard `@click` event:
 </sl-button>
 ```
 
-### sl_input.lustre
+### sl_input.ghtml
 Text input with custom `@sl-input` event. Takes a decoder:
 ```html
 @import(gleam/dynamic/decode)
@@ -133,7 +133,7 @@ Text input with custom `@sl-input` event. Takes a decoder:
 />
 ```
 
-### sl_checkbox.lustre
+### sl_checkbox.ghtml
 Checkbox with conditional `checked` boolean attribute and `@sl-change`:
 ```html
 {#if is_checked}
@@ -147,7 +147,7 @@ Checkbox with conditional `checked` boolean attribute and `@sl-change`:
 {/if}
 ```
 
-### sl_dialog.lustre
+### sl_dialog.ghtml
 Modal dialog with `@sl-hide` event for close detection:
 ```html
 <sl-dialog label={title} open @sl-hide={on_close_decoder}>
@@ -160,7 +160,7 @@ Modal dialog with `@sl-hide` event for close detection:
 
 Note: `@sl-hide` uses a decoder, while `@click` uses a direct function call.
 
-### sl_card.lustre
+### sl_card.ghtml
 Card with image slot:
 ```html
 <sl-card class="card">
@@ -170,7 +170,7 @@ Card with image slot:
 </sl-card>
 ```
 
-### sl_select.lustre
+### sl_select.ghtml
 Select dropdown using `{#each}` for options:
 ```html
 <sl-select label={label} value={selected} @sl-change={on_change}>
@@ -200,12 +200,12 @@ Select dropdown using `{#each}` for options:
 ## Key Files
 
 - `src/types.gleam` - Custom types used by components
-- `src/components/sl_button.lustre` - Button with variants
-- `src/components/sl_input.lustre` - Input with @sl-input
-- `src/components/sl_checkbox.lustre` - Checkbox with boolean attr
-- `src/components/sl_dialog.lustre` - Dialog with @sl-hide
-- `src/components/sl_card.lustre` - Card with image slot
-- `src/components/sl_select.lustre` - Select with {#each}
+- `src/components/sl_button.ghtml` - Button with variants
+- `src/components/sl_input.ghtml` - Input with @sl-input
+- `src/components/sl_checkbox.ghtml` - Checkbox with boolean attr
+- `src/components/sl_dialog.ghtml` - Dialog with @sl-hide
+- `src/components/sl_card.ghtml` - Card with image slot
+- `src/components/sl_select.ghtml` - Select with {#each}
 - `src/app.gleam` - Main app demonstrating all components and decoders
 
 ## Exercises

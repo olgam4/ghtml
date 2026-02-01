@@ -2,7 +2,7 @@
 
 ## Concepts
 
-This example demonstrates how to use [Tailwind CSS](https://tailwindcss.com/) utility-first styling with Lustre templates. It shows that Tailwind classes work seamlessly in `.lustre` files since they're passed through as standard `class` attributes.
+This example demonstrates how to use [Tailwind CSS](https://tailwindcss.com/) utility-first styling with Lustre templates. It shows that Tailwind classes work seamlessly in `.ghtml` files since they're passed through as standard `class` attributes.
 
 ## Prerequisites
 
@@ -13,7 +13,7 @@ Complete Examples 01-04 first to understand basic template syntax, attributes, e
 For quick prototyping, we use the Tailwind Play CDN. Add it to your `gleam.toml`:
 
 ```toml
-[tools.lustre.html]
+[tools.ghtml.html]
 title = "Tailwind Example"
 scripts = [
   { src = "https://cdn.tailwindcss.com" }
@@ -97,12 +97,12 @@ Common state prefixes:
 Create a separate template for each variant:
 
 ```html
-<!-- button_primary.lustre -->
+<!-- button_primary.ghtml -->
 <button class="bg-blue-600 hover:bg-blue-700 text-white ...">
   {label}
 </button>
 
-<!-- button_secondary.lustre -->
+<!-- button_secondary.ghtml -->
 <button class="bg-gray-200 hover:bg-gray-300 text-gray-800 ...">
   {label}
 </button>
@@ -115,7 +115,7 @@ This approach:
 
 ## Components in This Example
 
-### card.lustre
+### card.ghtml
 Responsive card with image, shadow, and rounded corners:
 ```html
 <div class="max-w-sm rounded-lg overflow-hidden shadow-lg bg-white">
@@ -127,7 +127,7 @@ Responsive card with image, shadow, and rounded corners:
 </div>
 ```
 
-### button_primary.lustre / button_secondary.lustre
+### button_primary.ghtml / button_secondary.ghtml
 Buttons with hover and focus states. Separate templates for each variant:
 ```html
 <button
@@ -138,7 +138,7 @@ Buttons with hover and focus states. Separate templates for each variant:
 </button>
 ```
 
-### navbar.lustre
+### navbar.ghtml
 Responsive navigation with flexbox:
 ```html
 <nav class="bg-gray-800 shadow-lg">
@@ -150,7 +150,7 @@ Responsive navigation with flexbox:
 </nav>
 ```
 
-### alert_success.lustre / alert_error.lustre
+### alert_success.ghtml / alert_error.ghtml
 Alert components with variant-specific colors:
 ```html
 <div class="rounded-md bg-green-50 p-4 mb-4">
@@ -207,18 +207,18 @@ This generates only the CSS you actually use, resulting in much smaller file siz
 ## Key Files
 
 - `src/types.gleam` - NavItem type for navbar
-- `src/components/card.lustre` - Card with image and content
-- `src/components/button_primary.lustre` - Primary button variant
-- `src/components/button_secondary.lustre` - Secondary button variant
-- `src/components/navbar.lustre` - Navigation bar with links
-- `src/components/alert_success.lustre` - Success alert
-- `src/components/alert_error.lustre` - Error alert
+- `src/components/card.ghtml` - Card with image and content
+- `src/components/button_primary.ghtml` - Primary button variant
+- `src/components/button_secondary.ghtml` - Secondary button variant
+- `src/components/navbar.ghtml` - Navigation bar with links
+- `src/components/alert_success.ghtml` - Success alert
+- `src/components/alert_error.ghtml` - Error alert
 - `src/app.gleam` - Main app demonstrating all components
 
 ## Exercises
 
-1. Add a `button_danger.lustre` variant with red styling
-2. Create an `alert_warning.lustre` with yellow/amber colors
+1. Add a `button_danger.ghtml` variant with red styling
+2. Create an `alert_warning.ghtml` with yellow/amber colors
 3. Add a footer component with responsive columns
 4. Create a form component with Tailwind-styled inputs
 5. Add dark mode support using `dark:` prefix (requires Tailwind config)

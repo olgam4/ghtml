@@ -1,4 +1,4 @@
-// @generated from checkbox_field.lustre
+// @generated from checkbox_field.ghtml
 // @hash 3e97df5262670e6c28d0db6ea000474e3e0cb3d2930d6421c1e6ea8573c3e0e0
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 

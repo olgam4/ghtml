@@ -361,7 +361,7 @@ for task in load("tasks.jsonl"):
 
 ## Recommendations
 
-### For This Project (lustre_template_gen)
+### For This Project (ghtml)
 
 Given:
 - Gleam/Lustre codebase (moderate size)

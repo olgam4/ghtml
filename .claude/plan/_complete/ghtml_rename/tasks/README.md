@@ -17,16 +17,16 @@ The numbering indicates required execution order due to dependencies.
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 001 | GitHub Rename | [ ] Pending | USER ACTION REQUIRED |
-| 002 | Extension References | [ ] Pending | Update .lustre → .ghtml in source |
-| 003 | Module Structure | [ ] Pending | Rename directories and gleam.toml |
-| 004 | Source Imports | [ ] Pending | Update imports in src/ |
-| 005 | Test Imports | [ ] Pending | Update imports in test/ |
-| 006 | Template Files | [ ] Pending | Rename .lustre → .ghtml files |
-| 007 | Justfile | [ ] Pending | Update build commands |
-| 008 | Documentation | [ ] Pending | Update all docs |
-| 009 | Assets | [ ] Pending | Update GIF scripts |
-| 010 | Verification | [ ] Pending | Final test suite run |
+| 001 | GitHub Rename | [x] Complete | Repository renamed to ghtml |
+| 002 | Extension References | [x] Complete | Updated .lustre → .ghtml in source |
+| 003 | Module Structure | [x] Complete | Renamed directories and gleam.toml |
+| 004 | Source Imports | [x] Complete | Updated imports in src/ |
+| 005 | Test Imports | [x] Complete | Updated imports in test/ |
+| 006 | Template Files | [x] Complete | Renamed .lustre → .ghtml files |
+| 007 | Justfile | [x] Complete | Updated build commands |
+| 008 | Documentation | [x] Complete | Updated all docs |
+| 009 | Assets | [x] Complete | Updated GIF scripts |
+| 010 | Verification | [x] Complete | Final test suite passed |
 
 Status legend:
 - `[ ] Pending` - Not started

@@ -1,4 +1,4 @@
-// @generated from md_button.lustre
+// @generated from md_button.ghtml
 // @hash 027af63e8a63ba9a6f8d24a2cced01dd05afbc0021c0b964d5880535388e0d03
 // DO NOT EDIT - regenerate with: gleam run -m ghtml
 
