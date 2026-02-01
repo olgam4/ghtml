@@ -22,91 +22,83 @@ See the Quick Reference table in `.claude/CODEBASE.md` for all commands. Key one
 
 Regenerate README demos with `just gifs`. See `assets/gif-record/README.md` for prerequisites and details.
 
-# Epic-Based Work
+# Task Management
 
-The `.claude/plan/` directory contains detailed specifications for multi-session work organized into epics with tasks.
+All tasks are tracked in **Beads**, a git-backed issue tracker.
 
-## Directory Structure
-
-```
-.claude/plan/
-├── _template/                    # Templates for creating new epics
-│   ├── PLAN.md                   # Epic plan template
-│   ├── research/                 # Research documentation template
-│   │   └── README.md
-│   └── tasks/
-│       ├── README.md             # Tasks overview template
-│       └── 000_template_task.md  # Individual task template
-├── _complete/                    # Archive of completed epics
-│   └── <epic_name>/              # Moved here when all tasks done
-├── <epic_name>/                  # Each epic has its own folder
-│   ├── PLAN.md                   # High-level epic plan
-│   ├── research/                 # Research docs (optional)
-│   │   └── *.md                  # Investigation findings
-│   └── tasks/
-│       ├── README.md             # Task overview and status
-│       └── NNN_task_name.md      # Individual task specs
-```
-
-## Researching Before Planning
-
-For complex epics, research first and document findings:
-
-1. Create the epic folder: `just epic your_epic_name`
-2. Create `research/` folder within the epic
-3. Write research documents exploring tools, approaches, or alternatives
-4. Use findings to inform `PLAN.md` design decisions
-5. Link research docs from PLAN.md's Research section
-
-Research documents capture investigation that would otherwise be lost between sessions.
-
-## Creating a New Epic
-
-1. Run: `just epic your_epic_name`
-2. (Optional) Research and document in `research/` folder
-3. Edit `.claude/plan/your_epic_name/PLAN.md` with your epic's details
-4. Create task files from `tasks/000_template_task.md`
-5. Update `tasks/README.md` with task status tracking
-
-## Completing an Epic
-
-When all tasks in an epic are marked complete (`[x]`), archive the epic:
+## Quick Reference
 
 ```bash
-mv .claude/plan/<epic_name> .claude/plan/_complete/
+# View available work
+bd ready              # Tasks ready to work on (no blockers)
+bd list               # All tasks
+bd show <id>          # Task details
+
+# Work on tasks
+just orchestrate      # Run parallel agents
+just worker <id>      # Work on single task
+just orchestrate-status  # Check progress
+
+# Create work
+bd create "Task name" -p 1    # Create task (priority 0-4)
+bd dep add <task> <blocker>   # Add dependency
+bd close <id>                 # Complete task
 ```
 
-Update `.claude/plan/_complete/README.md` to add the epic to the archived list.
+## Creating Work
+
+```bash
+# Create epic with tasks
+bd create "Epic: Feature Name" -p 0 --label epic
+
+# Create tasks under epic
+bd create "Implement parser" -p 1 --label task
+
+# Add detailed description via comment
+bd comment <task-id> "
+## Requirements
+- Parse X format
+- Handle edge cases Y, Z
+
+## Acceptance Criteria
+- [ ] Unit tests pass
+- [ ] Integration tests pass
+"
+
+# Set dependencies between tasks
+bd dep add <task-id> <blocker-id>
+```
+
+## Detailed Specifications
+
+For complex features requiring detailed specs, use `.claude/specs/`:
+- `just new-spec <name>` - Create spec folder with templates
+- Specs contain requirements.md, design.md, research/
+
+The `.claude/plan/` directory contains legacy epic/task specifications that can be migrated to Beads using `just migrate-to-beads`.
 
 # Execution Modes
 
-Choose the appropriate mode based on your workflow:
+## Automated Mode (Recommended)
+
+For parallel agent execution with PR workflow:
+- Status tracked in Beads
+- Multiple agents work concurrently
+- Automatic PR creation and merging
+- See: `.claude/docs/orchestration.md`
+
+```bash
+bd init                           # Initialize (first time)
+just orchestrate --epic <id>      # Run parallel agents
+just merger                       # Process PRs
+```
 
 ## Manual Mode (Sequential)
 
-For human-orchestrated, step-by-step task execution:
-- Status tracked in `.claude/plan/<epic>/tasks/README.md` (markdown checkboxes)
+For human-orchestrated, step-by-step execution:
+- Status tracked via markdown checkboxes
 - Single task at a time
-- See: `.claude/SUBAGENT.md` for detailed instructions
-
-```bash
-# View task, implement, update README status manually
-```
-
-## Automated Mode (Parallel)
-
-For script-orchestrated, parallel agent execution:
-- Status tracked in Beads (machine-queryable)
-- Multiple agents work concurrently
-- See: `.claude/docs/orchestration.md` for setup and usage
-
-```bash
-# Initialize beads (first time)
-bd init
-
-# Run parallel orchestration
-just orchestrate --epic <epic_id>
-```
+- See: `.claude/SUBAGENT.md`
 
 ## When to Use Which
 
