@@ -286,6 +286,14 @@ orchestrate-help:
 test-crash-recovery:
     ./scripts/test-crash-recovery.sh
 
+# Migrate .claude/plan/ epics to beads
+migrate-to-beads *args:
+    ./scripts/migrate-plan-to-beads.sh {{args}}
+
+# Preview migration without making changes
+migrate-to-beads-preview:
+    ./scripts/migrate-plan-to-beads.sh --dry-run
+
 # === Planning ===
 
 # Create a new epic from template (e.g., just epic my_feature)
