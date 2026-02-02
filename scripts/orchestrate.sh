@@ -4,11 +4,16 @@
 #
 # Architecture:
 #   - Spawner: Finds open tasks, launches worker agents
-#   - Worker: Implements task, creates PR, updates status to pr_created
-#   - Merger: Finds pr_created tasks, merges PRs, cleans up
+#   - Worker: Implements task, creates PR, adds pr:<id> label
+#   - Merger: Finds in_progress tasks with pr: labels, merges PRs, cleans up
 #
-# Statuses: open → in_progress → pr_created → closed (+ blocked)
-# Labels: pr:<pr_id>
+# State Machine:
+#   open → in_progress → in_progress+pr:N label → closed
+#   (+ blocked for tasks with unmet dependencies)
+#
+# Detection:
+#   - "working": in_progress WITHOUT pr: label
+#   - "pr_ready": in_progress WITH pr: label
 # ==============================================================================
 set -euo pipefail
 
@@ -98,27 +103,44 @@ remove_pid() {
 
 # ============ QUERIES ============
 get_open_tasks() {
+    local tasks blocked_ids
     if [ -n "$EPIC_FILTER" ]; then
-        bd list --status open --parent "$EPIC_FILTER" --json 2>/dev/null || echo "[]"
+        # Get open tasks under epic, then filter out blocked ones
+        tasks=$(bd list --status open --parent "$EPIC_FILTER" --json 2>/dev/null || echo "[]")
+        blocked_ids=$(bd blocked --json 2>/dev/null | jq -r '.[].id' || echo "")
+        if [ -n "$blocked_ids" ]; then
+            echo "$tasks" | jq --argjson blocked "$(echo "$blocked_ids" | jq -R -s 'split("\n") | map(select(length > 0))')" \
+                '[.[] | select(.id as $id | $blocked | index($id) | not)]'
+        else
+            echo "$tasks"
+        fi
     else
         bd ready --json 2>/dev/null || echo "[]"
     fi
 }
 
 get_in_progress_tasks() {
+    # Tasks in_progress WITHOUT pr:* label (still working, no PR yet)
+    local tasks
     if [ -n "$EPIC_FILTER" ]; then
-        bd list --status in_progress --parent "$EPIC_FILTER" --json 2>/dev/null || echo "[]"
+        tasks=$(bd list --status in_progress --parent "$EPIC_FILTER" --json 2>/dev/null || echo "[]")
     else
-        bd list --status in_progress --json 2>/dev/null || echo "[]"
+        tasks=$(bd list --status in_progress --json 2>/dev/null || echo "[]")
     fi
+    # Filter out tasks that have pr: labels
+    echo "$tasks" | jq '[.[] | select(((.labels // []) | any(startswith("pr:"))) | not)]'
 }
 
 get_pr_created_tasks() {
+    # Tasks in_progress WITH pr:* label (PR created, waiting for merge)
+    local tasks
     if [ -n "$EPIC_FILTER" ]; then
-        bd list --status pr_created --parent "$EPIC_FILTER" --json 2>/dev/null || echo "[]"
+        tasks=$(bd list --status in_progress --parent "$EPIC_FILTER" --json 2>/dev/null || echo "[]")
     else
-        bd list --status pr_created --json 2>/dev/null || echo "[]"
+        tasks=$(bd list --status in_progress --json 2>/dev/null || echo "[]")
     fi
+    # Filter to only tasks that have pr: labels
+    echo "$tasks" | jq '[.[] | select((.labels // []) | any(startswith("pr:")))]'
 }
 
 get_pr_label() {
@@ -251,13 +273,27 @@ merge_pr() {
 
     log "Checking PR #$pr_num for $task_id"
 
-    # Check if PR is mergeable
-    local mergeable
-    mergeable=$(gh pr view "$pr_num" --json mergeable,state \
-        --jq 'if .state == "OPEN" and .mergeable == "MERGEABLE" then "yes" else "no" end' 2>/dev/null || echo "no")
+    # Check PR state
+    local pr_state pr_mergeable
+    pr_state=$(gh pr view "$pr_num" --json state --jq '.state' 2>/dev/null || echo "UNKNOWN")
 
-    if [ "$mergeable" != "yes" ]; then
-        log "PR #$pr_num not ready to merge (mergeable=$mergeable)"
+    # If already merged, return success (cleanup should happen)
+    if [ "$pr_state" = "MERGED" ]; then
+        log "PR #$pr_num already merged"
+        return 0
+    fi
+
+    # If closed (not merged), something went wrong
+    if [ "$pr_state" = "CLOSED" ]; then
+        log "WARNING: PR #$pr_num was closed without merging"
+        return 1
+    fi
+
+    # Check if PR is mergeable
+    pr_mergeable=$(gh pr view "$pr_num" --json mergeable --jq '.mergeable' 2>/dev/null || echo "UNKNOWN")
+
+    if [ "$pr_mergeable" != "MERGEABLE" ]; then
+        log "PR #$pr_num not ready to merge (state=$pr_state, mergeable=$pr_mergeable)"
         return 1
     fi
 

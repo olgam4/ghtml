@@ -69,17 +69,17 @@ EOF
 )"
 ```
 
-### Phase 6: Update Task Status (CRITICAL)
-After creating the PR, you MUST update the task status:
+### Phase 6: Add PR Label (CRITICAL)
+After creating the PR, you MUST add the PR label so the merger can find it:
 ```bash
 # Get PR number from the URL (gh pr create outputs the URL)
 PR_NUM=$(gh pr view --json number -q .number)
 
-# Update beads with pr_created status and PR label
-bd update $TASK_ID --status pr_created --add-label "pr:$PR_NUM"
+# Add PR label to task (merger looks for in_progress tasks with pr: labels)
+bd update $TASK_ID --add-label "pr:$PR_NUM"
 ```
 
-This step is CRITICAL - the merger will not pick up your PR unless you update the status.
+This step is CRITICAL - the merger will not pick up your PR unless you add the pr: label.
 
 ## Rules
 
@@ -106,4 +106,4 @@ Your work is complete when:
 - [ ] `just check` passes
 - [ ] Changes committed and pushed
 - [ ] PR created
-- [ ] Task status updated to `pr_created` with `pr:<number>` label
+- [ ] Task has `pr:<number>` label added
