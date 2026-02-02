@@ -211,18 +211,20 @@ spawn_agent() {
         fi
 
         # Capture output using script command for pseudo-TTY (enables real-time output)
+        # NOTE: We use claude WITHOUT --print so output streams in real-time
+        # The script command creates a PTY so claude behaves interactively
         # macOS and Linux have different script syntax
         if [[ "$(uname)" == "Darwin" ]]; then
             # macOS: script -q file command [args]
-            script -q "$log_file" claude --print "$prompt" 2>&1 || true
+            script -q "$log_file" claude "$prompt" 2>&1 || true
         elif command -v script &>/dev/null; then
             # Linux: script -q -c "command" file
-            script -q -c "claude --print \"$prompt\"" "$log_file" 2>&1 || true
+            script -q -c "claude \"$prompt\"" "$log_file" 2>&1 || true
         elif command -v unbuffer &>/dev/null; then
             # Fallback: unbuffer for real-time output
-            unbuffer claude --print "$prompt" >> "$log_file" 2>&1 || true
+            unbuffer claude "$prompt" >> "$log_file" 2>&1 || true
         else
-            # Last resort: direct redirect (buffered)
+            # Last resort: direct redirect (buffered, no real-time)
             claude --print "$prompt" >> "$log_file" 2>&1 || true
         fi
 
