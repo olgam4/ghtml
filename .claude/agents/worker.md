@@ -15,7 +15,6 @@ bd show $TASK_ID
 1. Read the task description from beads
 2. Check for any linked spec files in `.claude/plan/` or `.claude/specs/`
 3. Understand the acceptance criteria
-4. Update phase: `bd update $TASK_ID --add-label "phase:working"`
 
 ### Phase 2: Implementation (TDD)
 1. Read `.claude/CODEBASE.md` for architecture context
@@ -45,12 +44,7 @@ EOF
 )"
 ```
 
-Update phase:
-```bash
-bd update $TASK_ID --remove-label "phase:working" --add-label "phase:committed"
-```
-
-### Phase 5: Push and PR
+### Phase 5: Push and Create PR
 Push your branch and create a PR:
 ```bash
 git push -u origin HEAD
@@ -75,34 +69,41 @@ EOF
 )"
 ```
 
-Record the PR and update phase:
+### Phase 6: Update Task Status (CRITICAL)
+After creating the PR, you MUST update the task status:
 ```bash
-bd update $TASK_ID --remove-label "phase:committed" --add-label "phase:pr_created"
+# Get PR number from the URL (gh pr create outputs the URL)
+PR_NUM=$(gh pr view --json number -q .number)
+
+# Update beads with pr_created status and PR label
+bd update $TASK_ID --status pr_created --add-label "pr:$PR_NUM"
 ```
+
+This step is CRITICAL - the merger will not pick up your PR unless you update the status.
 
 ## Rules
 
 1. **Stay focused**: Only implement what the task requires
 2. **No scope creep**: Don't fix unrelated issues you notice
-3. **Update beads**: Always update phase labels as you progress
-4. **Test first**: Follow TDD - write tests before implementation
-5. **Clean commits**: One logical commit per task
-6. **Clear PRs**: PR description should explain what and why
-7. **Specific staging**: Use `git add <files>` not `git add -A` to avoid committing unrelated files
+3. **Test first**: Follow TDD - write tests before implementation
+4. **Clean commits**: One logical commit per task
+5. **Clear PRs**: PR description should explain what and why
+6. **Specific staging**: Use `git add <files>` not `git add -A` to avoid committing unrelated files
+7. **Update status**: Always run Phase 6 after creating PR
 
 ## Error Handling
 
 If you encounter an error you cannot resolve:
-1. Document the error in the agent log
-2. Do NOT update phase to committed if tests fail
-3. The orchestrator will detect the stalled agent
+1. Document the error in a comment
+2. Set task to blocked: `bd update $TASK_ID --status blocked`
+3. Do NOT create a PR if tests fail
 
-## Completion
+## Completion Checklist
 
 Your work is complete when:
 - [ ] Task implemented according to spec
 - [ ] All tests pass
 - [ ] `just check` passes
-- [ ] Changes committed
+- [ ] Changes committed and pushed
 - [ ] PR created
-- [ ] Beads updated with `phase:pr_created` label
+- [ ] Task status updated to `pr_created` with `pr:<number>` label

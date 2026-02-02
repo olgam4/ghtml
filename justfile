@@ -208,7 +208,7 @@ list-epics:
 
 # === Orchestration ===
 
-# Run parallel agent orchestrator
+# Run combined spawner + merger loop
 orchestrate *args:
     ./scripts/orchestrate.sh {{args}}
 
@@ -216,51 +216,21 @@ orchestrate *args:
 orchestrate-epic epic max_agents="4":
     ./scripts/orchestrate.sh --epic {{epic}} --max-agents {{max_agents}}
 
+# Run spawner only (launch workers for open tasks)
+orchestrate-spawner *args:
+    ./scripts/orchestrate.sh spawner {{args}}
+
+# Run merger only (merge PRs, cleanup)
+orchestrate-merger *args:
+    ./scripts/orchestrate.sh merger {{args}}
+
 # Preview orchestration without executing
 orchestrate-preview *args:
     ./scripts/orchestrate.sh --dry-run {{args}}
 
-# Show orchestration status from beads
+# Show task status table
 orchestrate-status:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    echo "=== Ready Tasks ==="
-    bd ready 2>/dev/null || echo "No ready tasks"
-    echo ""
-    echo "=== In Progress ==="
-    bd list --status in_progress 2>/dev/null || echo "None in progress"
-    echo ""
-    echo "=== Active Worktrees ==="
-    git worktree list | grep -v "$(pwd)" || echo "No worktrees"
-    echo ""
-    echo "=== Agent Logs ==="
-    if [ -d ".beads/orchestrator/logs" ]; then
-        for log_dir in .beads/orchestrator/logs/*/; do
-            [ -d "$log_dir" ] || continue
-            task_id=$(basename "$log_dir")
-            status="unknown"
-            [ -f "${log_dir}/status" ] && status=$(cat "${log_dir}/status")
-            log_size=$(wc -c < "${log_dir}/agent.log" 2>/dev/null | tr -d ' ' || echo "0")
-            printf "  %-12s  %-10s  %s bytes\n" "$task_id" "$status" "$log_size"
-        done
-    else
-        echo "  (no logs yet)"
-    fi
-    echo ""
-    echo "Tip: Run 'just agent-tail <task-id>' to follow a log"
-    echo ""
-    echo "=== Open Agent PRs ==="
-    gh pr list --json number,title,headRefName \
-        --jq '.[] | select(.headRefName | startswith("agent/")) | "#\(.number): \(.title)"' \
-        2>/dev/null || echo "No agent PRs"
-
-# Spawn a single worker agent for a task
-worker task_id:
-    ./scripts/run-worker.sh {{task_id}}
-
-# Run the merger agent to process PRs
-merger *args:
-    ./scripts/run-merger.sh {{args}}
+    ./scripts/orchestrate.sh status
 
 # Clean up all worktrees
 worktree-clean:
@@ -277,49 +247,37 @@ worktree-remove task_id:
     git worktree remove "../worktrees/{{task_id}}" --force 2>/dev/null || true
     git branch -d "agent/{{task_id}}" 2>/dev/null || true
 
-# Show agent status table
-agent-status:
-    ./scripts/orchestrate.sh status
-
-# List agent processes with PIDs
-agent-ps:
-    ./scripts/orchestrate.sh ps
-
 # List all agent logs
-agent-logs:
+orchestrate-logs:
     ./scripts/orchestrate.sh logs
 
 # Show full log for a specific agent
-agent-log task_id:
+orchestrate-log task_id:
     ./scripts/orchestrate.sh log {{task_id}}
 
 # Follow agent log output in real-time
-agent-tail task_id lines="50":
+orchestrate-tail task_id lines="50":
     ./scripts/orchestrate.sh tail {{task_id}} {{lines}}
 
 # Show orchestration help
 orchestrate-help:
-    @echo "Parallel Orchestration Commands:"
+    @echo "Orchestration Commands:"
     @echo ""
-    @echo "  just orchestrate              Run orchestrator for all ready tasks"
+    @echo "  just orchestrate              Run combined spawner + merger loop"
     @echo "  just orchestrate --epic X     Run for specific epic"
     @echo "  just orchestrate-epic X       Shorthand for --epic"
-    @echo "  just orchestrate-status       Show current orchestration state"
+    @echo ""
+    @echo "  just orchestrate-spawner      Run spawner only (launch workers)"
+    @echo "  just orchestrate-merger       Run merger only (merge PRs)"
     @echo "  just orchestrate-preview      Preview what would run (dry-run)"
     @echo ""
-    @echo "  just worker <task-id>         Spawn single worker agent"
-    @echo "  just merger                   Run merger to process PRs"
-    @echo "  just merger --dry-run         Preview merger actions"
-    @echo ""
-    @echo "  just agent-ps                 List agent PIDs and status"
-    @echo "  just agent-logs               List all agent logs"
-    @echo "  just agent-log <task-id>      Show full log for an agent"
-    @echo "  just agent-tail <task-id>     Follow agent log in real-time"
+    @echo "  just orchestrate-status       Show task status table"
+    @echo "  just orchestrate-logs         List all agent logs"
+    @echo "  just orchestrate-log <id>     Show full log for an agent"
+    @echo "  just orchestrate-tail <id>    Follow agent log in real-time"
     @echo ""
     @echo "  just worktree-clean           Remove all worktrees"
     @echo "  just worktree-remove <id>     Remove specific worktree"
-    @echo ""
-    @echo "  just test-crash-recovery      Run crash recovery tests"
 
 # Run crash recovery tests
 test-crash-recovery:

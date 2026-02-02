@@ -1,19 +1,14 @@
 #!/bin/bash
 # ==============================================================================
-# orchestrate.sh - Parallel agent orchestrator using Beads for state management
+# orchestrate.sh - Parallel agent orchestrator
 #
-# Usage: ./scripts/orchestrate.sh [OPTIONS]
+# Architecture:
+#   - Spawner: Finds open tasks, launches worker agents
+#   - Worker: Implements task, creates PR, updates status to pr_created
+#   - Merger: Finds pr_created tasks, merges PRs, cleans up
 #
-# Options:
-#   -e, --epic EPIC_ID    Only process tasks under this epic
-#   -m, --max-agents N    Maximum parallel agents (default: 4)
-#   -d, --dry-run         Show what would happen without executing
-#   -h, --help            Show this help
-#
-# Description:
-#   Manages parallel agent execution across isolated git worktrees.
-#   Runtime state is stored in Beads notes field as JSON for crash resilience.
-#   Uses labels for phase tracking (phase:spawned, phase:working, etc.)
+# Statuses: open → in_progress → pr_created → closed (+ blocked)
+# Labels: pr:<pr_id>
 # ==============================================================================
 set -euo pipefail
 
@@ -21,11 +16,11 @@ WORKTREE_BASE="../worktrees"
 MAX_AGENTS=4
 EPIC_FILTER=""
 DRY_RUN=false
+WATCH_MODE=false
 
-# State file for runtime info (worktree paths, PIDs, etc.)
 STATE_DIR=".beads/orchestrator"
-STATE_FILE="$STATE_DIR/state.json"
 LOGS_DIR="$STATE_DIR/logs"
+PID_FILE="$STATE_DIR/pids.json"
 
 # ============ ARGUMENT PARSING ============
 usage() {
@@ -33,28 +28,20 @@ usage() {
 Usage: $(basename "$0") [OPTIONS] [COMMAND]
 
 Commands:
-  (none)                Run the orchestrator
-  status                Show agent status table
-  ps                    List agent processes with PIDs
-  logs                  List all agent logs
-  log TASK_ID           Show full log for a task
-  tail TASK_ID [N]      Follow log output (last N lines, default 50)
+  (none)              Run combined spawner + merger loop
+  spawner             Run spawner only (launch workers)
+  merger              Run merger only (merge PRs)
+  status              Show agent status table
+  logs                List all agent logs
+  log TASK_ID         Show full log for a task
+  tail TASK_ID [N]    Follow log output
 
 Options:
   -e, --epic EPIC_ID    Only process tasks under this epic
   -m, --max-agents N    Maximum parallel agents (default: 4)
+  -w, --watch           Keep running in loop (for merger)
   -d, --dry-run         Show what would happen without executing
   -h, --help            Show this help
-
-Examples:
-  $(basename "$0")                          # Run orchestrator
-  $(basename "$0") -e ghtml-a3f8            # Only epic ghtml-a3f8
-  $(basename "$0") --epic ghtml-a3f8 --max-agents 6
-  $(basename "$0") --dry-run                # Preview mode
-  $(basename "$0") logs                     # List all logs
-  $(basename "$0") log ghtml-abc            # Show log for task
-  $(basename "$0") tail ghtml-abc           # Follow log output
-  $(basename "$0") tail ghtml-abc 100       # Follow last 100 lines
 EOF
     exit 0
 }
@@ -66,9 +53,10 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         -e|--epic) EPIC_FILTER="$2"; shift 2 ;;
         -m|--max-agents) MAX_AGENTS="$2"; shift 2 ;;
+        -w|--watch) WATCH_MODE=true; shift ;;
         -d|--dry-run) DRY_RUN=true; shift ;;
         -h|--help) usage ;;
-        status|ps|logs|log|tail)
+        spawner|merger|status|logs|log|tail)
             COMMAND="$1"
             shift
             COMMAND_ARGS=("$@")
@@ -82,55 +70,42 @@ log() { echo "[$(date '+%H:%M:%S')] $*"; }
 dry() { $DRY_RUN && echo "[DRY-RUN] $*" && return 0 || return 1; }
 
 # ============ STATE MANAGEMENT ============
-# State is stored in a local JSON file, keyed by task ID
-# Format: { "task-id": { "worktree": "...", "branch": "...", "pid": "...", "phase": "..." } }
-
 init_state() {
     mkdir -p "$STATE_DIR"
     mkdir -p "$LOGS_DIR"
-    [ -f "$STATE_FILE" ] || echo '{}' > "$STATE_FILE"
+    [ -f "$PID_FILE" ] || echo '{}' > "$PID_FILE"
 }
 
-get_task_state() {
+get_pid() {
     local task_id=$1
-    jq -r --arg id "$task_id" '.[$id] // empty' "$STATE_FILE"
+    jq -r --arg id "$task_id" '.[$id] // empty' "$PID_FILE" 2>/dev/null
 }
 
-set_task_state() {
+set_pid() {
     local task_id=$1
-    local key=$2
-    local value=$3
-    local tmp
-    tmp=$(mktemp)
-    jq --arg id "$task_id" --arg k "$key" --arg v "$value" \
-        '.[$id] = (.[$id] // {}) | .[$id][$k] = $v' "$STATE_FILE" > "$tmp"
-    mv "$tmp" "$STATE_FILE"
+    local pid=$2
+    local tmp=$(mktemp)
+    jq --arg id "$task_id" --arg p "$pid" '.[$id] = $p' "$PID_FILE" > "$tmp"
+    mv "$tmp" "$PID_FILE"
 }
 
-get_task_field() {
+remove_pid() {
     local task_id=$1
-    local key=$2
-    jq -r --arg id "$task_id" --arg k "$key" '.[$id][$k] // empty' "$STATE_FILE"
+    local tmp=$(mktemp)
+    jq --arg id "$task_id" 'del(.[$id])' "$PID_FILE" > "$tmp"
+    mv "$tmp" "$PID_FILE"
 }
 
-remove_task_state() {
-    local task_id=$1
-    local tmp
-    tmp=$(mktemp)
-    jq --arg id "$task_id" 'del(.[$id])' "$STATE_FILE" > "$tmp"
-    mv "$tmp" "$STATE_FILE"
-}
-
-# ============ FILTERED QUERIES ============
-get_ready_tasks() {
+# ============ QUERIES ============
+get_open_tasks() {
     if [ -n "$EPIC_FILTER" ]; then
-        bd ready --parent "$EPIC_FILTER" --json 2>/dev/null || echo "[]"
+        bd list --status open --parent "$EPIC_FILTER" --json 2>/dev/null || echo "[]"
     else
         bd ready --json 2>/dev/null || echo "[]"
     fi
 }
 
-get_active_tasks() {
+get_in_progress_tasks() {
     if [ -n "$EPIC_FILTER" ]; then
         bd list --status in_progress --parent "$EPIC_FILTER" --json 2>/dev/null || echo "[]"
     else
@@ -138,20 +113,21 @@ get_active_tasks() {
     fi
 }
 
-validate_epic() {
+get_pr_created_tasks() {
     if [ -n "$EPIC_FILTER" ]; then
-        if ! bd show "$EPIC_FILTER" &>/dev/null; then
-            echo "Error: Epic '$EPIC_FILTER' not found"
-            echo "Available epics:"
-            bd list --json | jq -r '.[] | select(.labels[]? == "epic") | "  \(.id): \(.title // .subject)"' 2>/dev/null || echo "  (none)"
-            exit 1
-        fi
-        log "Filtering to epic: $EPIC_FILTER"
+        bd list --status pr_created --parent "$EPIC_FILTER" --json 2>/dev/null || echo "[]"
+    else
+        bd list --status pr_created --json 2>/dev/null || echo "[]"
     fi
 }
 
-# ============ AGENT LIFECYCLE ============
-spawn_agent() {
+get_pr_label() {
+    local task_id=$1
+    bd show "$task_id" --json 2>/dev/null | jq -r '.[0].labels[]? | select(startswith("pr:")) | sub("pr:"; "")' | head -1
+}
+
+# ============ SPAWNER ============
+spawn_worker() {
     local task_id=$1
     local subject=$2
     local worktree="${WORKTREE_BASE}/${task_id}"
@@ -159,238 +135,282 @@ spawn_agent() {
 
     log "Spawning: $task_id - $subject"
 
-    if dry "Would spawn agent for $task_id in $worktree"; then
+    if dry "Would spawn worker for $task_id"; then
         return 0
     fi
 
-    # Create worktree (idempotent)
+    # Create worktree
     if [ ! -d "$worktree" ]; then
         git worktree add "$worktree" -b "$branch" 2>/dev/null || \
-        git worktree add "$worktree" "$branch" 2>/dev/null || true
+        git worktree add "$worktree" "$branch" 2>/dev/null || {
+            log "ERROR: Failed to create worktree for $task_id"
+            return 1
+        }
     fi
 
-    # Update beads status and add phase label
-    bd update "$task_id" --status in_progress --add-label "phase:spawned" 2>/dev/null || true
+    # Update status
+    bd update "$task_id" --status in_progress 2>/dev/null || true
 
-    # Store runtime state locally
-    set_task_state "$task_id" "worktree" "$worktree"
-    set_task_state "$task_id" "branch" "$branch"
-    set_task_state "$task_id" "phase" "spawned"
-    set_task_state "$task_id" "spawned_at" "$(date -Iseconds)"
-
-    # Set up logging (use absolute paths since agent runs in worktree)
-    local log_dir
-    log_dir="$(pwd)/${LOGS_DIR}/${task_id}"
+    # Set up logging
+    local log_dir="$(pwd)/${LOGS_DIR}/${task_id}"
     mkdir -p "$log_dir"
     local log_file="${log_dir}/agent.log"
-    local status_file="${log_dir}/status"
 
-    # Initialize log and status
-    echo "=== Agent started at $(date -Iseconds) ===" > "$log_file"
-    echo "Task: $task_id - $subject" >> "$log_file"
-    echo "Worktree: $worktree" >> "$log_file"
-    echo "---" >> "$log_file"
-    echo "running" > "$status_file"
+    # Initialize log
+    {
+        echo "=== Worker started at $(date -Iseconds) ==="
+        echo "Task: $task_id - $subject"
+        echo "Worktree: $worktree"
+        echo "---"
+    } > "$log_file"
 
-    set_task_state "$task_id" "log_file" "$log_file"
-    set_task_state "$task_id" "status_file" "$status_file"
-
-    # Build the prompt
+    # Build prompt
     local prompt
     if [ -f "$worktree/.claude/agents/worker.md" ]; then
-        prompt=$(cat "$worktree/.claude/agents/worker.md" | sed "s/\$TASK_ID/$task_id/g")
+        prompt=$(sed "s/\$TASK_ID/$task_id/g" "$worktree/.claude/agents/worker.md")
     else
-        # Fallback: simple prompt
-        prompt="Execute beads task $task_id. Run 'bd show $task_id' to see details. Run 'just check' before committing."
+        prompt="Execute beads task $task_id. Run 'bd show $task_id' for details. Create PR when done and run: bd update $task_id --status pr_created"
     fi
 
-    # Launch agent fully detached in background
-    # The subshell: cd to worktree, run claude, mark completion when done
+    # Launch worker (script provides PTY for real-time logs)
     (
         cd "$worktree"
-
-        # Update phase to working
-        bd update "$task_id" --remove-label "phase:spawned" --add-label "phase:working" 2>/dev/null || true
-
-        # Run agent with real-time output to log file
-        # - script: creates PTY so claude streams output (not buffered)
-        # - script writes to log_file, we discard script's own stdout
-        # - --dangerously-skip-permissions: no interactive prompts
         if [[ "$(uname)" == "Darwin" ]]; then
-            # macOS: script -q file command...
             script -q "$log_file" claude --dangerously-skip-permissions "$prompt" >/dev/null 2>&1
         else
-            # Linux: script -q -c "command" file
             script -q -c "claude --dangerously-skip-permissions \"$prompt\"" "$log_file" >/dev/null 2>&1
         fi
-
-        # Mark completion when claude exits
-        echo "completed" > "$status_file"
         echo "---" >> "$log_file"
-        echo "=== Agent finished at $(date -Iseconds) ===" >> "$log_file"
+        echo "=== Worker finished at $(date -Iseconds) ===" >> "$log_file"
     ) </dev/null &
 
     local pid=$!
-    set_task_state "$task_id" "pid" "$pid"
-    set_task_state "$task_id" "phase" "working"
+    set_pid "$task_id" "$pid"
+    log "Started worker PID $pid for $task_id"
 }
 
-check_agent() {
+run_spawner() {
+    log "Running spawner (max $MAX_AGENTS agents)"
+
+    # Count current in_progress tasks
+    local in_progress
+    in_progress=$(get_in_progress_tasks | jq 'length')
+
+    if [ "$in_progress" -ge "$MAX_AGENTS" ]; then
+        log "At capacity: $in_progress/$MAX_AGENTS agents running"
+        return 0
+    fi
+
+    local slots=$((MAX_AGENTS - in_progress))
+    log "Available slots: $slots"
+
+    # Get open tasks and spawn workers
+    get_open_tasks | jq -c '.[]' 2>/dev/null | head -n "$slots" | while read -r task; do
+        [ -z "$task" ] || [ "$task" = "null" ] && continue
+
+        local task_id subject
+        task_id=$(echo "$task" | jq -r '.id')
+        subject=$(echo "$task" | jq -r '.title // .subject')
+
+        spawn_worker "$task_id" "$subject"
+    done
+}
+
+# ============ MERGER ============
+kill_worker() {
     local task_id=$1
+    local pid
+    pid=$(get_pid "$task_id")
 
-    local pid worktree phase
-    pid=$(get_task_field "$task_id" "pid")
-    worktree=$(get_task_field "$task_id" "worktree")
-    phase=$(get_task_field "$task_id" "phase")
-
-    # Default phase if not set
-    [ -z "$phase" ] && phase="unknown"
-
-    # Still running?
     if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
-        local log_file
-        log_file=$(get_task_field "$task_id" "log_file")
-        local log_size="0"
-        [ -f "$log_file" ] && log_size=$(wc -c < "$log_file" | tr -d ' ')
-        log "$task_id: running (phase: $phase) - log: ${log_size} bytes"
-        return 0
+        log "Killing worker PID $pid for $task_id"
+        kill "$pid" 2>/dev/null || true
+        # Kill child processes too
+        pkill -P "$pid" 2>/dev/null || true
     fi
 
-    # Process ended - handle based on phase
-    case "$phase" in
-        spawned|working)
-            if [ -d "$worktree" ]; then
-                local commits
-                commits=$(cd "$worktree" && git log origin/master..HEAD --oneline 2>/dev/null | wc -l | tr -d ' ' || echo "0")
-                if [ "$commits" -gt 0 ]; then
-                    log "$task_id: has $commits commit(s) - advancing to committed"
-                    set_task_state "$task_id" "phase" "committed"
-                    set_task_state "$task_id" "pid" ""
-                    bd update "$task_id" --remove-label "phase:working" --add-label "phase:committed" 2>/dev/null || true
-                else
-                    log "$task_id: ended with no commits - checking for work"
-                    local changes
-                    changes=$(cd "$worktree" && git status --porcelain 2>/dev/null | wc -l | tr -d ' ' || echo "0")
-                    if [ "$changes" -gt 0 ]; then
-                        log "$task_id: has uncommitted changes - respawning"
-                        local subject
-                        subject=$(bd show "$task_id" --json | jq -r '.[0].title // .[0].subject')
-                        spawn_agent "$task_id" "$subject"
-                    else
-                        log "$task_id: no work done - marking blocked"
-                        set_task_state "$task_id" "phase" "blocked"
-                        set_task_state "$task_id" "pid" ""
-                        bd update "$task_id" --remove-label "phase:working" --add-label "phase:blocked" 2>/dev/null || true
-                    fi
-                fi
-            fi
-            ;;
-        committed)
-            log "$task_id: pushing and creating PR"
-            if ! dry "Would push and create PR for $task_id"; then
-                (
-                    cd "$worktree"
-                    local branch
-                    branch=$(get_task_field "$task_id" "branch")
-                    git push -u origin "$branch" 2>/dev/null || true
-
-                    local subject
-                    subject=$(bd show "$task_id" --json | jq -r '.[0].title // .[0].subject')
-                    local pr_url
-                    pr_url=$(gh pr create --title "feat: $subject" --body "Implements $task_id" 2>/dev/null || echo "")
-
-                    if [ -n "$pr_url" ]; then
-                        local pr_num
-                        pr_num=$(echo "$pr_url" | grep -oE '[0-9]+$' || echo "")
-                        if [ -n "$pr_num" ]; then
-                            set_task_state "$task_id" "pr_number" "$pr_num"
-                            set_task_state "$task_id" "phase" "pr_created"
-                            bd update "$task_id" --remove-label "phase:committed" --add-label "phase:pr_created" 2>/dev/null || true
-                        fi
-                    fi
-                )
-            fi
-            ;;
-        pr_created)
-            local pr_num
-            pr_num=$(get_task_field "$task_id" "pr_number")
-            if [ -n "$pr_num" ]; then
-                local state
-                state=$(gh pr view "$pr_num" --json state -q .state 2>/dev/null || echo "")
-                if [ "$state" = "MERGED" ]; then
-                    log "$task_id: merged - closing"
-                    set_task_state "$task_id" "phase" "merged"
-                    bd update "$task_id" --remove-label "phase:pr_created" --add-label "phase:merged" 2>/dev/null || true
-                    bd close "$task_id" 2>/dev/null || true
-                    cleanup_worktree "$task_id"
-                fi
-            fi
-            ;;
-    esac
-}
-
-try_merge() {
-    local task_id=$1
-
-    local pr_num worktree
-    pr_num=$(get_task_field "$task_id" "pr_number")
-    worktree=$(get_task_field "$task_id" "worktree")
-
-    [ -z "$pr_num" ] && return 0
-
-    if dry "Would try to merge PR #$pr_num for $task_id"; then
-        return 0
-    fi
-
-    local ready
-    ready=$(gh pr view "$pr_num" --json mergeable,statusCheckRollup \
-        --jq 'if .mergeable == "MERGEABLE" and (.statusCheckRollup == null or .statusCheckRollup.state == "SUCCESS" or (.statusCheckRollup | length) == 0) then "yes" else "no" end' 2>/dev/null || echo "no")
-
-    if [ "$ready" = "yes" ]; then
-        log "$task_id: merging PR #$pr_num"
-        if gh pr merge "$pr_num" --squash --delete-branch 2>/dev/null; then
-            set_task_state "$task_id" "phase" "merged"
-            bd update "$task_id" --remove-label "phase:pr_created" --add-label "phase:merged" 2>/dev/null || true
-            bd close "$task_id" 2>/dev/null || true
-            cleanup_worktree "$task_id"
-        fi
-    else
-        log "$task_id: PR #$pr_num not ready to merge"
-    fi
+    remove_pid "$task_id"
 }
 
 cleanup_worktree() {
     local task_id=$1
+    local worktree="${WORKTREE_BASE}/${task_id}"
+    local branch="agent/${task_id}"
 
-    if dry "Would cleanup worktree for $task_id"; then
+    if [ -d "$worktree" ]; then
+        log "Removing worktree: $worktree"
+        git worktree remove "$worktree" --force 2>/dev/null || true
+    fi
+
+    git branch -D "$branch" 2>/dev/null || true
+}
+
+merge_pr() {
+    local task_id=$1
+    local pr_num=$2
+
+    log "Checking PR #$pr_num for $task_id"
+
+    # Check if PR is mergeable
+    local mergeable
+    mergeable=$(gh pr view "$pr_num" --json mergeable,state \
+        --jq 'if .state == "OPEN" and .mergeable == "MERGEABLE" then "yes" else "no" end' 2>/dev/null || echo "no")
+
+    if [ "$mergeable" != "yes" ]; then
+        log "PR #$pr_num not ready to merge (mergeable=$mergeable)"
+        return 1
+    fi
+
+    if dry "Would merge PR #$pr_num"; then
         return 0
     fi
 
-    local worktree
-    worktree=$(get_task_field "$task_id" "worktree")
-
-    [ -d "$worktree" ] && git worktree remove "$worktree" --force 2>/dev/null || true
-    git branch -d "agent/${task_id}" 2>/dev/null || true
-
-    remove_task_state "$task_id"
+    log "Merging PR #$pr_num"
+    if gh pr merge "$pr_num" --squash --delete-branch 2>/dev/null; then
+        log "Successfully merged PR #$pr_num"
+        return 0
+    else
+        log "Failed to merge PR #$pr_num"
+        return 1
+    fi
 }
 
-# ============ LOG VIEWING ============
-show_agent_log() {
+run_merger() {
+    log "Running merger"
+
+    local tasks
+    tasks=$(get_pr_created_tasks)
+    local count
+    count=$(echo "$tasks" | jq 'length')
+
+    if [ "$count" -eq 0 ]; then
+        log "No tasks with status=pr_created"
+        return 0
+    fi
+
+    log "Found $count task(s) with PRs to merge"
+
+    echo "$tasks" | jq -c '.[]' 2>/dev/null | while read -r task; do
+        [ -z "$task" ] || [ "$task" = "null" ] && continue
+
+        local task_id
+        task_id=$(echo "$task" | jq -r '.id')
+
+        # Get PR number from label
+        local pr_num
+        pr_num=$(get_pr_label "$task_id")
+
+        if [ -z "$pr_num" ]; then
+            log "WARNING: Task $task_id has status=pr_created but no pr: label"
+            continue
+        fi
+
+        # Try to merge
+        if merge_pr "$task_id" "$pr_num"; then
+            # Kill worker
+            kill_worker "$task_id"
+
+            # Cleanup worktree
+            cleanup_worktree "$task_id"
+
+            # Close task
+            if ! dry "Would close task $task_id"; then
+                bd close "$task_id" 2>/dev/null || true
+                log "Closed task $task_id"
+            fi
+        fi
+    done
+}
+
+# ============ STATUS & LOGS ============
+show_status() {
+    echo "=== Task Status ==="
+    echo ""
+    printf "%-12s  %-14s  %-8s  %s\n" "TASK" "STATUS" "PID" "PR"
+    printf "%-12s  %-14s  %-8s  %s\n" "----" "------" "---" "--"
+
+    # Get all relevant tasks
+    {
+        get_in_progress_tasks
+        get_pr_created_tasks
+    } | jq -s 'add // []' | jq -c '.[]' 2>/dev/null | while read -r task; do
+        [ -z "$task" ] || [ "$task" = "null" ] && continue
+
+        local task_id status pr_label pid pid_status
+        task_id=$(echo "$task" | jq -r '.id')
+        status=$(echo "$task" | jq -r '.status')
+
+        pr_label=$(get_pr_label "$task_id")
+        [ -n "$pr_label" ] && pr_label="PR #$pr_label"
+
+        pid=$(get_pid "$task_id")
+        if [ -n "$pid" ]; then
+            if kill -0 "$pid" 2>/dev/null; then
+                pid_status="$pid (alive)"
+            else
+                pid_status="$pid (dead)"
+            fi
+        else
+            pid_status="-"
+        fi
+
+        printf "%-12s  %-14s  %-8s  %s\n" "$task_id" "$status" "$pid_status" "$pr_label"
+    done
+
+    echo ""
+
+    # Show open PRs
+    local pr_count
+    pr_count=$(gh pr list --json number --jq 'length' 2>/dev/null || echo "0")
+    if [ "$pr_count" -gt 0 ]; then
+        echo "=== Open PRs ==="
+        gh pr list --json number,title,headRefName \
+            --jq '.[] | select(.headRefName | startswith("agent/")) | "#\(.number): \(.title)"' 2>/dev/null
+    fi
+}
+
+show_logs() {
+    echo "=== Agent Logs ==="
+    if [ ! -d "$LOGS_DIR" ] || [ -z "$(ls -A "$LOGS_DIR" 2>/dev/null)" ]; then
+        echo "(no logs)"
+        return 0
+    fi
+
+    printf "%-12s  %s\n" "TASK" "SIZE"
+    printf "%-12s  %s\n" "----" "----"
+
+    for log_dir in "$LOGS_DIR"/*/; do
+        [ -d "$log_dir" ] || continue
+        local task_id log_size
+        task_id=$(basename "$log_dir")
+        log_size=$(wc -c < "${log_dir}/agent.log" 2>/dev/null | tr -d ' ' || echo "0")
+
+        if [ "$log_size" -gt 1048576 ]; then
+            log_size="$((log_size / 1048576))MB"
+        elif [ "$log_size" -gt 1024 ]; then
+            log_size="$((log_size / 1024))KB"
+        else
+            log_size="${log_size}B"
+        fi
+
+        printf "%-12s  %s\n" "$task_id" "$log_size"
+    done
+}
+
+show_log() {
     local task_id=$1
     local log_file="${LOGS_DIR}/${task_id}/agent.log"
 
     if [ ! -f "$log_file" ]; then
         echo "No log found for $task_id"
-        echo "Available logs:"
-        ls -1 "$LOGS_DIR" 2>/dev/null || echo "  (none)"
+        ls -1 "$LOGS_DIR" 2>/dev/null || echo "(no logs)"
         exit 1
     fi
 
     cat "$log_file"
 }
 
-tail_agent_log() {
+tail_log() {
     local task_id=$1
     local lines=${2:-50}
     local log_file="${LOGS_DIR}/${task_id}/agent.log"
@@ -403,196 +423,90 @@ tail_agent_log() {
     tail -f -n "$lines" "$log_file"
 }
 
-list_agent_logs() {
-    echo "=== Agent Logs ==="
-    if [ ! -d "$LOGS_DIR" ] || [ -z "$(ls -A "$LOGS_DIR" 2>/dev/null)" ]; then
-        echo "(no logs yet)"
-        return 0
-    fi
-    for log_dir in "$LOGS_DIR"/*/; do
-        [ -d "$log_dir" ] || continue
-        local task_id
-        task_id=$(basename "$log_dir")
-        local status="unknown"
-        [ -f "${log_dir}/status" ] && status=$(cat "${log_dir}/status")
-        local log_size
-        log_size=$(wc -c < "${log_dir}/agent.log" 2>/dev/null | tr -d ' ' || echo "0")
-        printf "%-12s  %-10s  %s bytes\n" "$task_id" "$status" "$log_size"
-    done
-}
-
-list_agent_pids() {
-    echo "=== Agent Processes ==="
-    if [ ! -f "$STATE_FILE" ]; then
-        echo "(no state file)"
-        return 0
-    fi
-
-    printf "%-12s  %-8s  %-10s  %s\n" "TASK" "PID" "STATUS" "WORKTREE"
-    printf "%-12s  %-8s  %-10s  %s\n" "----" "---" "------" "--------"
-
-    jq -r 'to_entries[] | "\(.key)\t\(.value.pid // "-")\t\(.value.phase // "unknown")\t\(.value.worktree // "-")"' "$STATE_FILE" 2>/dev/null | \
-    while IFS=$'\t' read -r task pid phase worktree; do
-        # Check if PID is still running
-        local running="dead"
-        if [ -n "$pid" ] && [ "$pid" != "-" ] && kill -0 "$pid" 2>/dev/null; then
-            running="alive"
-        fi
-        printf "%-12s  %-8s  %-10s  %s\n" "$task" "${pid:--} ($running)" "$phase" "$worktree"
-    done
-}
-
-show_status_table() {
-    echo "=== Agent Status ==="
-    echo ""
-    printf "%-12s  %-14s  %-10s  %s\n" "TASK" "PHASE" "LOG" "NOTES"
-    printf "%-12s  %-14s  %-10s  %s\n" "----" "-----" "---" "-----"
-
-    if [ ! -f "$STATE_FILE" ]; then
-        echo "(no agents running)"
-        return 0
-    fi
-
-    jq -r 'to_entries[] | "\(.key)\t\(.value.phase // "unknown")\t\(.value.log_file // "-")\t\(.value.pr_number // "")"' "$STATE_FILE" 2>/dev/null | \
-    while IFS=$'\t' read -r task phase log_file pr_num; do
-        # Get log size
-        local log_size="-"
-        if [ -n "$log_file" ] && [ -f "$log_file" ]; then
-            local bytes
-            bytes=$(wc -c < "$log_file" 2>/dev/null | tr -d ' ')
-            if [ "$bytes" -gt 1048576 ]; then
-                log_size="$((bytes / 1048576))MB"
-            elif [ "$bytes" -gt 1024 ]; then
-                log_size="$((bytes / 1024))KB"
-            else
-                log_size="${bytes}B"
-            fi
-        fi
-
-        # Build notes
-        local notes=""
-        if [ -n "$pr_num" ]; then
-            notes="PR #$pr_num"
-        fi
-
-        printf "%-12s  %-14s  %-10s  %s\n" "$task" "$phase" "$log_size" "$notes"
-    done
-
-    echo ""
-
-    # Show PR summary if any
-    local pr_count
-    pr_count=$(gh pr list --json number --jq 'length' 2>/dev/null || echo "0")
-    if [ "$pr_count" -gt 0 ]; then
-        echo "=== Open PRs ==="
-        gh pr list --json number,title,headRefName \
-            --jq '.[] | select(.headRefName | startswith("agent/")) | "#\(.number): \(.title)"' 2>/dev/null
-    fi
-}
-
-# ============ COMMAND HANDLING ============
-# Handle log commands (now that functions are defined)
+# ============ MAIN ============
 handle_command() {
     case "$COMMAND" in
-        status)
+        spawner)
             init_state
-            show_status_table
+            if $WATCH_MODE; then
+                while true; do
+                    run_spawner
+                    sleep 30
+                done
+            else
+                run_spawner
+            fi
             exit 0
             ;;
-        ps)
+        merger)
             init_state
-            list_agent_pids
+            if $WATCH_MODE; then
+                while true; do
+                    run_merger
+                    sleep 30
+                done
+            else
+                run_merger
+            fi
+            exit 0
+            ;;
+        status)
+            init_state
+            show_status
             exit 0
             ;;
         logs)
             init_state
-            list_agent_logs
+            show_logs
             exit 0
             ;;
         log)
             init_state
             [ ${#COMMAND_ARGS[@]} -lt 1 ] && { echo "Usage: $0 log TASK_ID"; exit 1; }
-            show_agent_log "${COMMAND_ARGS[0]}"
+            show_log "${COMMAND_ARGS[0]}"
             exit 0
             ;;
         tail)
             init_state
             [ ${#COMMAND_ARGS[@]} -lt 1 ] && { echo "Usage: $0 tail TASK_ID [LINES]"; exit 1; }
-            tail_agent_log "${COMMAND_ARGS[0]}" "${COMMAND_ARGS[1]:-50}"
+            tail_log "${COMMAND_ARGS[0]}" "${COMMAND_ARGS[1]:-50}"
             exit 0
             ;;
     esac
 }
 
-# Process command if one was specified
 [ -n "$COMMAND" ] && handle_command
 
-# ============ MAIN LOOP ============
+# Default: run combined spawner + merger loop
 main() {
     init_state
-    validate_epic
 
-    $DRY_RUN && log "DRY RUN MODE - no changes will be made"
+    [ -n "$EPIC_FILTER" ] && log "Filtering to epic: $EPIC_FILTER"
+    $DRY_RUN && log "DRY RUN MODE"
     log "Starting orchestrator (max $MAX_AGENTS agents)"
 
-    mkdir -p "$WORKTREE_BASE"
-
     while true; do
-        # Check active tasks
-        local active_tasks
-        active_tasks=$(get_active_tasks)
+        # Run spawner
+        run_spawner
 
-        echo "$active_tasks" | jq -c '.[]' 2>/dev/null | while read -r task; do
-            [ -z "$task" ] || [ "$task" = "null" ] && continue
+        # Run merger
+        run_merger
 
-            local task_id
-            task_id=$(echo "$task" | jq -r '.id')
+        # Status summary
+        local in_progress pr_created open_count
+        in_progress=$(get_in_progress_tasks | jq 'length')
+        pr_created=$(get_pr_created_tasks | jq 'length')
+        open_count=$(get_open_tasks | jq 'length')
 
-            check_agent "$task_id"
-
-            local phase
-            phase=$(get_task_field "$task_id" "phase")
-            if [ "$phase" = "pr_created" ]; then
-                try_merge "$task_id"
-            fi
-        done
-
-        # Spawn new agents if capacity available
-        local active_count
-        active_count=$(echo "$active_tasks" | jq 'length')
-
-        if [ "$active_count" -lt "$MAX_AGENTS" ]; then
-            local slots ready_tasks
-            slots=$((MAX_AGENTS - active_count))
-            ready_tasks=$(get_ready_tasks)
-
-            echo "$ready_tasks" | jq -c '.[]' 2>/dev/null | head -n "$slots" | while read -r task; do
-                [ -z "$task" ] || [ "$task" = "null" ] && continue
-
-                local task_id subject
-                task_id=$(echo "$task" | jq -r '.id')
-                subject=$(echo "$task" | jq -r '.title // .subject')
-                spawn_agent "$task_id" "$subject"
-            done
-        fi
-
-        # Status report
-        local ready_count
-        ready_count=$(get_ready_tasks | jq 'length')
-        active_count=$(get_active_tasks | jq 'length')
-        log "Status: $active_count active, $ready_count ready"
+        log "Status: $in_progress working, $pr_created pending merge, $open_count ready"
 
         # Done?
-        if [ "$active_count" -eq 0 ] && [ "$ready_count" -eq 0 ]; then
+        if [ "$in_progress" -eq 0 ] && [ "$pr_created" -eq 0 ] && [ "$open_count" -eq 0 ]; then
             log "All tasks complete!"
             break
         fi
 
-        # In dry-run mode, exit after one iteration
-        if $DRY_RUN; then
-            log "Dry run complete - would continue polling every 30s"
-            break
-        fi
+        $DRY_RUN && { log "Dry run complete"; break; }
 
         sleep 30
     done
