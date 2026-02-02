@@ -25,11 +25,18 @@ DRY_RUN=false
 # State file for runtime info (worktree paths, PIDs, etc.)
 STATE_DIR=".beads/orchestrator"
 STATE_FILE="$STATE_DIR/state.json"
+LOGS_DIR="$STATE_DIR/logs"
 
 # ============ ARGUMENT PARSING ============
 usage() {
     cat << EOF
-Usage: $(basename "$0") [OPTIONS]
+Usage: $(basename "$0") [OPTIONS] [COMMAND]
+
+Commands:
+  (none)                Run the orchestrator
+  logs                  List all agent logs
+  log TASK_ID           Show full log for a task
+  tail TASK_ID [N]      Follow log output (last N lines, default 50)
 
 Options:
   -e, --epic EPIC_ID    Only process tasks under this epic
@@ -38,13 +45,20 @@ Options:
   -h, --help            Show this help
 
 Examples:
-  $(basename "$0")                          # All ready tasks
+  $(basename "$0")                          # Run orchestrator
   $(basename "$0") -e ghtml-a3f8            # Only epic ghtml-a3f8
   $(basename "$0") --epic ghtml-a3f8 --max-agents 6
   $(basename "$0") --dry-run                # Preview mode
+  $(basename "$0") logs                     # List all logs
+  $(basename "$0") log ghtml-abc            # Show log for task
+  $(basename "$0") tail ghtml-abc           # Follow log output
+  $(basename "$0") tail ghtml-abc 100       # Follow last 100 lines
 EOF
     exit 0
 }
+
+COMMAND=""
+COMMAND_ARGS=()
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -52,6 +66,12 @@ while [[ $# -gt 0 ]]; do
         -m|--max-agents) MAX_AGENTS="$2"; shift 2 ;;
         -d|--dry-run) DRY_RUN=true; shift ;;
         -h|--help) usage ;;
+        logs|log|tail)
+            COMMAND="$1"
+            shift
+            COMMAND_ARGS=("$@")
+            break
+            ;;
         *) echo "Unknown option: $1"; usage ;;
     esac
 done
@@ -65,6 +85,7 @@ dry() { $DRY_RUN && echo "[DRY-RUN] $*" && return 0 || return 1; }
 
 init_state() {
     mkdir -p "$STATE_DIR"
+    mkdir -p "$LOGS_DIR"
     [ -f "$STATE_FILE" ] || echo '{}' > "$STATE_FILE"
 }
 
@@ -155,23 +176,59 @@ spawn_agent() {
     set_task_state "$task_id" "phase" "spawned"
     set_task_state "$task_id" "spawned_at" "$(date -Iseconds)"
 
-    # Launch agent in background
+    # Set up logging
+    local log_dir="${LOGS_DIR}/${task_id}"
+    mkdir -p "$log_dir"
+    local log_file="${log_dir}/agent.log"
+    local status_file="${log_dir}/status"
+
+    # Initialize log and status
+    echo "=== Agent started at $(date -Iseconds) ===" > "$log_file"
+    echo "Task: $task_id - $subject" >> "$log_file"
+    echo "Worktree: $worktree" >> "$log_file"
+    echo "---" >> "$log_file"
+    echo "running" > "$status_file"
+
+    set_task_state "$task_id" "log_file" "$log_file"
+    set_task_state "$task_id" "status_file" "$status_file"
+
+    # Launch agent in background with real-time logging
     (
         cd "$worktree"
 
         # Update phase
         bd update "$task_id" --remove-label "phase:spawned" --add-label "phase:working" 2>/dev/null || true
 
-        # Agent executes task
+        # Agent executes task with output captured via script command
+        # Using script for real-time unbuffered output capture
+        local prompt
         if [ -f ".claude/agents/worker.md" ]; then
-            local prompt
             prompt=$(cat .claude/agents/worker.md | sed "s/\$TASK_ID/$task_id/g")
-            claude --print "$prompt" > agent.log 2>&1 || true
         else
             # Fallback: simple prompt
-            claude --print "Execute beads task $task_id. Run 'bd show $task_id' to see details. Run 'just check' before committing." \
-                > agent.log 2>&1 || true
+            prompt="Execute beads task $task_id. Run 'bd show $task_id' to see details. Run 'just check' before committing."
         fi
+
+        # Capture output using script command for pseudo-TTY (enables real-time output)
+        # macOS and Linux have different script syntax
+        if [[ "$(uname)" == "Darwin" ]]; then
+            # macOS: script -q file command [args]
+            script -q "$log_file" claude --print "$prompt" 2>&1 || true
+        elif command -v script &>/dev/null; then
+            # Linux: script -q -c "command" file
+            script -q -c "claude --print \"$prompt\"" "$log_file" 2>&1 || true
+        elif command -v unbuffer &>/dev/null; then
+            # Fallback: unbuffer for real-time output
+            unbuffer claude --print "$prompt" >> "$log_file" 2>&1 || true
+        else
+            # Last resort: direct redirect (buffered)
+            claude --print "$prompt" >> "$log_file" 2>&1 || true
+        fi
+
+        # Mark completion
+        echo "completed" > "$status_file"
+        echo "---" >> "$log_file"
+        echo "=== Agent finished at $(date -Iseconds) ===" >> "$log_file"
     ) &
 
     local pid=$!
@@ -192,7 +249,11 @@ check_agent() {
 
     # Still running?
     if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
-        log "$task_id: running (phase: $phase)"
+        local log_file
+        log_file=$(get_task_field "$task_id" "log_file")
+        local log_size="0"
+        [ -f "$log_file" ] && log_size=$(wc -c < "$log_file" | tr -d ' ')
+        log "$task_id: running (phase: $phase) - log: ${log_size} bytes"
         return 0
     fi
 
@@ -214,7 +275,7 @@ check_agent() {
                     if [ "$changes" -gt 0 ]; then
                         log "$task_id: has uncommitted changes - respawning"
                         local subject
-                        subject=$(bd show "$task_id" --json | jq -r '.title // .subject')
+                        subject=$(bd show "$task_id" --json | jq -r '.[0].title // .[0].subject')
                         spawn_agent "$task_id" "$subject"
                     else
                         log "$task_id: no work done - marking blocked"
@@ -235,7 +296,7 @@ check_agent() {
                     git push -u origin "$branch" 2>/dev/null || true
 
                     local subject
-                    subject=$(bd show "$task_id" --json | jq -r '.title // .subject')
+                    subject=$(bd show "$task_id" --json | jq -r '.[0].title // .[0].subject')
                     local pr_url
                     pr_url=$(gh pr create --title "feat: $subject" --body "Implements $task_id" 2>/dev/null || echo "")
 
@@ -314,6 +375,79 @@ cleanup_worktree() {
 
     remove_task_state "$task_id"
 }
+
+# ============ LOG VIEWING ============
+show_agent_log() {
+    local task_id=$1
+    local log_file="${LOGS_DIR}/${task_id}/agent.log"
+
+    if [ ! -f "$log_file" ]; then
+        echo "No log found for $task_id"
+        echo "Available logs:"
+        ls -1 "$LOGS_DIR" 2>/dev/null || echo "  (none)"
+        exit 1
+    fi
+
+    cat "$log_file"
+}
+
+tail_agent_log() {
+    local task_id=$1
+    local lines=${2:-50}
+    local log_file="${LOGS_DIR}/${task_id}/agent.log"
+
+    if [ ! -f "$log_file" ]; then
+        echo "No log found for $task_id"
+        exit 1
+    fi
+
+    tail -f -n "$lines" "$log_file"
+}
+
+list_agent_logs() {
+    echo "=== Agent Logs ==="
+    if [ ! -d "$LOGS_DIR" ] || [ -z "$(ls -A "$LOGS_DIR" 2>/dev/null)" ]; then
+        echo "(no logs yet)"
+        return 0
+    fi
+    for log_dir in "$LOGS_DIR"/*/; do
+        [ -d "$log_dir" ] || continue
+        local task_id
+        task_id=$(basename "$log_dir")
+        local status="unknown"
+        [ -f "${log_dir}/status" ] && status=$(cat "${log_dir}/status")
+        local log_size
+        log_size=$(wc -c < "${log_dir}/agent.log" 2>/dev/null | tr -d ' ' || echo "0")
+        printf "%-12s  %-10s  %s bytes\n" "$task_id" "$status" "$log_size"
+    done
+}
+
+# ============ COMMAND HANDLING ============
+# Handle log commands (now that functions are defined)
+handle_command() {
+    case "$COMMAND" in
+        logs)
+            init_state
+            list_agent_logs
+            exit 0
+            ;;
+        log)
+            init_state
+            [ ${#COMMAND_ARGS[@]} -lt 1 ] && { echo "Usage: $0 log TASK_ID"; exit 1; }
+            show_agent_log "${COMMAND_ARGS[0]}"
+            exit 0
+            ;;
+        tail)
+            init_state
+            [ ${#COMMAND_ARGS[@]} -lt 1 ] && { echo "Usage: $0 tail TASK_ID [LINES]"; exit 1; }
+            tail_agent_log "${COMMAND_ARGS[0]}" "${COMMAND_ARGS[1]:-50}"
+            exit 0
+            ;;
+    esac
+}
+
+# Process command if one was specified
+[ -n "$COMMAND" ] && handle_command
 
 # ============ MAIN LOOP ============
 main() {

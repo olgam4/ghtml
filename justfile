@@ -233,6 +233,22 @@ orchestrate-status:
     echo "=== Active Worktrees ==="
     git worktree list | grep -v "$(pwd)" || echo "No worktrees"
     echo ""
+    echo "=== Agent Logs ==="
+    if [ -d ".beads/orchestrator/logs" ]; then
+        for log_dir in .beads/orchestrator/logs/*/; do
+            [ -d "$log_dir" ] || continue
+            task_id=$(basename "$log_dir")
+            status="unknown"
+            [ -f "${log_dir}/status" ] && status=$(cat "${log_dir}/status")
+            log_size=$(wc -c < "${log_dir}/agent.log" 2>/dev/null | tr -d ' ' || echo "0")
+            printf "  %-12s  %-10s  %s bytes\n" "$task_id" "$status" "$log_size"
+        done
+    else
+        echo "  (no logs yet)"
+    fi
+    echo ""
+    echo "Tip: Run 'just agent-tail <task-id>' to follow a log"
+    echo ""
     echo "=== Open Agent PRs ==="
     gh pr list --json number,title,headRefName \
         --jq '.[] | select(.headRefName | startswith("agent/")) | "#\(.number): \(.title)"' \
@@ -261,6 +277,18 @@ worktree-remove task_id:
     git worktree remove "../worktrees/{{task_id}}" --force 2>/dev/null || true
     git branch -d "agent/{{task_id}}" 2>/dev/null || true
 
+# List all agent logs
+agent-logs:
+    ./scripts/orchestrate.sh logs
+
+# Show full log for a specific agent
+agent-log task_id:
+    ./scripts/orchestrate.sh log {{task_id}}
+
+# Follow agent log output in real-time
+agent-tail task_id lines="50":
+    ./scripts/orchestrate.sh tail {{task_id}} {{lines}}
+
 # Show orchestration help
 orchestrate-help:
     @echo "Parallel Orchestration Commands:"
@@ -274,6 +302,10 @@ orchestrate-help:
     @echo "  just worker <task-id>         Spawn single worker agent"
     @echo "  just merger                   Run merger to process PRs"
     @echo "  just merger --dry-run         Preview merger actions"
+    @echo ""
+    @echo "  just agent-logs               List all agent logs"
+    @echo "  just agent-log <task-id>      Show full log for an agent"
+    @echo "  just agent-tail <task-id>     Follow agent log in real-time"
     @echo ""
     @echo "  just worktree-clean           Remove all worktrees"
     @echo "  just worktree-remove <id>     Remove specific worktree"
