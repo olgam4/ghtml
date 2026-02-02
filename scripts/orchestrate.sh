@@ -176,8 +176,9 @@ spawn_agent() {
     set_task_state "$task_id" "phase" "spawned"
     set_task_state "$task_id" "spawned_at" "$(date -Iseconds)"
 
-    # Set up logging
-    local log_dir="${LOGS_DIR}/${task_id}"
+    # Set up logging (use absolute paths since agent runs in worktree)
+    local log_dir
+    log_dir="$(pwd)/${LOGS_DIR}/${task_id}"
     mkdir -p "$log_dir"
     local log_file="${log_dir}/agent.log"
     local status_file="${log_dir}/status"
