@@ -277,6 +277,10 @@ worktree-remove task_id:
     git worktree remove "../worktrees/{{task_id}}" --force 2>/dev/null || true
     git branch -d "agent/{{task_id}}" 2>/dev/null || true
 
+# Show agent status table
+agent-status:
+    ./scripts/orchestrate.sh status
+
 # List agent processes with PIDs
 agent-ps:
     ./scripts/orchestrate.sh ps

@@ -34,6 +34,7 @@ Usage: $(basename "$0") [OPTIONS] [COMMAND]
 
 Commands:
   (none)                Run the orchestrator
+  status                Show agent status table
   ps                    List agent processes with PIDs
   logs                  List all agent logs
   log TASK_ID           Show full log for a task
@@ -67,7 +68,7 @@ while [[ $# -gt 0 ]]; do
         -m|--max-agents) MAX_AGENTS="$2"; shift 2 ;;
         -d|--dry-run) DRY_RUN=true; shift ;;
         -h|--help) usage ;;
-        ps|logs|log|tail)
+        status|ps|logs|log|tail)
             COMMAND="$1"
             shift
             COMMAND_ARGS=("$@")
@@ -441,10 +442,63 @@ list_agent_pids() {
     done
 }
 
+show_status_table() {
+    echo "=== Agent Status ==="
+    echo ""
+    printf "%-12s  %-14s  %-10s  %s\n" "TASK" "PHASE" "LOG" "NOTES"
+    printf "%-12s  %-14s  %-10s  %s\n" "----" "-----" "---" "-----"
+
+    if [ ! -f "$STATE_FILE" ]; then
+        echo "(no agents running)"
+        return 0
+    fi
+
+    jq -r 'to_entries[] | "\(.key)\t\(.value.phase // "unknown")\t\(.value.log_file // "-")\t\(.value.pr_number // "")"' "$STATE_FILE" 2>/dev/null | \
+    while IFS=$'\t' read -r task phase log_file pr_num; do
+        # Get log size
+        local log_size="-"
+        if [ -n "$log_file" ] && [ -f "$log_file" ]; then
+            local bytes
+            bytes=$(wc -c < "$log_file" 2>/dev/null | tr -d ' ')
+            if [ "$bytes" -gt 1048576 ]; then
+                log_size="$((bytes / 1048576))MB"
+            elif [ "$bytes" -gt 1024 ]; then
+                log_size="$((bytes / 1024))KB"
+            else
+                log_size="${bytes}B"
+            fi
+        fi
+
+        # Build notes
+        local notes=""
+        if [ -n "$pr_num" ]; then
+            notes="PR #$pr_num"
+        fi
+
+        printf "%-12s  %-14s  %-10s  %s\n" "$task" "$phase" "$log_size" "$notes"
+    done
+
+    echo ""
+
+    # Show PR summary if any
+    local pr_count
+    pr_count=$(gh pr list --json number --jq 'length' 2>/dev/null || echo "0")
+    if [ "$pr_count" -gt 0 ]; then
+        echo "=== Open PRs ==="
+        gh pr list --json number,title,headRefName \
+            --jq '.[] | select(.headRefName | startswith("agent/")) | "#\(.number): \(.title)"' 2>/dev/null
+    fi
+}
+
 # ============ COMMAND HANDLING ============
 # Handle log commands (now that functions are defined)
 handle_command() {
     case "$COMMAND" in
+        status)
+            init_state
+            show_status_table
+            exit 0
+            ;;
         ps)
             init_state
             list_agent_pids
