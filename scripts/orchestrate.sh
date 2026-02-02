@@ -264,7 +264,11 @@ cleanup_worktree() {
         git worktree remove "$worktree" --force 2>/dev/null || true
     fi
 
+    # Delete local branch
     git branch -D "$branch" 2>/dev/null || true
+
+    # Delete remote branch (in case --delete-branch didn't work or PR was already merged)
+    git push origin --delete "$branch" 2>/dev/null || true
 }
 
 merge_pr() {
@@ -311,6 +315,21 @@ merge_pr() {
     fi
 }
 
+check_and_close_epic() {
+    # Check if all tasks under the epic are closed, and if so, close the epic
+    [ -z "$EPIC_FILTER" ] && return 0
+
+    local open_tasks
+    open_tasks=$(bd list --parent "$EPIC_FILTER" --json 2>/dev/null | jq '[.[] | select(.status != "closed")] | length')
+
+    if [ "$open_tasks" -eq 0 ]; then
+        if ! dry "Would close epic $EPIC_FILTER"; then
+            bd close "$EPIC_FILTER" --reason "All tasks completed" 2>/dev/null || true
+            log "Closed epic $EPIC_FILTER (all tasks completed)"
+        fi
+    fi
+}
+
 run_merger() {
     log "Running merger"
 
@@ -321,6 +340,8 @@ run_merger() {
 
     if [ "$count" -eq 0 ]; then
         log "No tasks with status=pr_created"
+        # Still check if epic should be closed
+        check_and_close_epic
         return 0
     fi
 
@@ -356,6 +377,9 @@ run_merger() {
             fi
         fi
     done
+
+    # Check if epic should be closed after processing all tasks
+    check_and_close_epic
 }
 
 # ============ STATUS & LOGS ============
