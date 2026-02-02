@@ -194,46 +194,33 @@ spawn_agent() {
     set_task_state "$task_id" "log_file" "$log_file"
     set_task_state "$task_id" "status_file" "$status_file"
 
-    # Launch agent in background with real-time logging
+    # Build the prompt
+    local prompt
+    if [ -f "$worktree/.claude/agents/worker.md" ]; then
+        prompt=$(cat "$worktree/.claude/agents/worker.md" | sed "s/\$TASK_ID/$task_id/g")
+    else
+        # Fallback: simple prompt
+        prompt="Execute beads task $task_id. Run 'bd show $task_id' to see details. Run 'just check' before committing."
+    fi
+
+    # Launch agent fully detached in background
+    # The subshell: cd to worktree, run claude, mark completion when done
     (
         cd "$worktree"
 
-        # Update phase
+        # Update phase to working
         bd update "$task_id" --remove-label "phase:spawned" --add-label "phase:working" 2>/dev/null || true
 
-        # Agent executes task with output captured via script command
-        # Using script for real-time unbuffered output capture
-        local prompt
-        if [ -f ".claude/agents/worker.md" ]; then
-            prompt=$(cat .claude/agents/worker.md | sed "s/\$TASK_ID/$task_id/g")
-        else
-            # Fallback: simple prompt
-            prompt="Execute beads task $task_id. Run 'bd show $task_id' to see details. Run 'just check' before committing."
-        fi
+        # Run agent - output goes only to log file
+        # --dangerously-skip-permissions: no prompts
+        # --print: outputs transcript (buffered until completion, but that's ok for logs)
+        claude --dangerously-skip-permissions --print "$prompt" >> "$log_file" 2>&1
 
-        # Capture output using script command for pseudo-TTY (enables real-time output)
-        # NOTE: We use --dangerously-skip-permissions for autonomous agent operation
-        # The script command creates a PTY so claude streams output
-        # macOS and Linux have different script syntax
-        if [[ "$(uname)" == "Darwin" ]]; then
-            # macOS: script -q file command [args]
-            script -q "$log_file" claude --dangerously-skip-permissions "$prompt" 2>&1 || true
-        elif command -v script &>/dev/null; then
-            # Linux: script -q -c "command" file
-            script -q -c "claude --dangerously-skip-permissions \"$prompt\"" "$log_file" 2>&1 || true
-        elif command -v unbuffer &>/dev/null; then
-            # Fallback: unbuffer for real-time output
-            unbuffer claude --dangerously-skip-permissions "$prompt" >> "$log_file" 2>&1 || true
-        else
-            # Last resort: direct redirect (buffered, no real-time)
-            claude --dangerously-skip-permissions --print "$prompt" >> "$log_file" 2>&1 || true
-        fi
-
-        # Mark completion
+        # Mark completion when claude exits
         echo "completed" > "$status_file"
         echo "---" >> "$log_file"
         echo "=== Agent finished at $(date -Iseconds) ===" >> "$log_file"
-    ) &
+    ) </dev/null >/dev/null 2>&1 &
 
     local pid=$!
     set_task_state "$task_id" "pid" "$pid"
