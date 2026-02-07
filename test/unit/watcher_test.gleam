@@ -20,6 +20,22 @@ fn cleanup_test_dir(base: String) {
   Nil
 }
 
+/// Poll for a file to exist, retrying at 100ms intervals.
+/// Returns True if found within the attempt limit, False otherwise.
+fn wait_for_file(path: String, attempts: Int) -> Bool {
+  case attempts <= 0 {
+    True -> False
+    False ->
+      case simplifile.is_file(path) {
+        Ok(True) -> True
+        _ -> {
+          process.sleep(100)
+          wait_for_file(path, attempts - 1)
+        }
+      }
+  }
+}
+
 // Note: Testing OTP actors requires careful timing.
 // These tests verify the components work correctly.
 
@@ -254,11 +270,9 @@ pub fn watcher_detects_new_file_test() {
   let output = test_dir <> "/src/test.gleam"
   let _ = simplifile.write(source, "<div>initial</div>")
 
-  // Wait for next check to detect the new file
-  process.sleep(600)
-
-  // Output should be generated
-  let assert Ok(True) = simplifile.is_file(output)
+  // Wait for watcher to detect and process the new file
+  let found = wait_for_file(output, 30)
+  should.be_true(found)
 
   // Stop watcher
   process.send(subject, watcher.Stop)
