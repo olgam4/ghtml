@@ -300,7 +300,7 @@ pub fn generate_format_compliant_params_test() {
   let code = lustre.generate(template, "test.ghtml", "abc123")
 
   // Parameters should be on single line without trailing comma
-  should.be_true(string.contains(code, "name: String, count: Int) ->"))
+  should.be_true(string.contains(code, "name name: String, count count: Int) ->"))
 }
 
 pub fn generate_format_compliant_single_child_test() {

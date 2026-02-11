@@ -310,7 +310,7 @@ pub fn generate_format_compliant_params_test() {
 
   let code = nakai.generate(template, "test.ghtml", "abc123")
 
-  should.be_true(string.contains(code, "name: String, count: Int) ->"))
+  should.be_true(string.contains(code, "name name: String, count count: Int) ->"))
 }
 
 pub fn generate_format_compliant_single_child_test() {

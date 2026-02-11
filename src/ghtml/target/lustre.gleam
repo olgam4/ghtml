@@ -186,9 +186,10 @@ fn generate_function(template: Template) -> String {
 }
 
 /// Generate function parameters from template params (single line, no trailing comma)
+/// Uses labeled arguments so components can be called with named params
 fn generate_params(params: List(#(String, String))) -> String {
   params
-  |> list.map(fn(p) { p.0 <> ": " <> p.1 })
+  |> list.map(fn(p) { p.0 <> " " <> p.0 <> ": " <> p.1 })
   |> string.join(", ")
 }
 
